@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ArrowLeft,
+  ArrowUp,
   Printer,
   ShieldAlert,
   AlertTriangle,
@@ -46,6 +47,16 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   const [rating, setRating] = useState<number>(candidate.interviewerRating || 0);
   const [expandedSetId, setExpandedSetId] = useState<number | null>(1);
   const [isSaved, setIsSaved] = useState(false);
+  const [showOnlyRedFlags, setShowOnlyRedFlags] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const interviewQuestions = generateInterviewProbingQuestions(candidate);
 
@@ -224,32 +235,51 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
         </div>
       </div>
 
-      {/* PUNCHY TAB NAVIGATION */}
-      <div className="flex items-center gap-1.5 border-b border-[#D6E2DA] mb-6 overflow-x-auto pb-1.5 no-print">
-        {[
-          { id: 'OVERVIEW', label: 'ภาพรวม (Overview)', icon: Layers },
-          { id: 'DOMAINS', label: '4 โดเมนหลัก', icon: Activity },
-          { id: 'DIMENSIONS', label: '14 มิติการรับมือ', icon: Brain },
-          { id: 'QUESTIONS', label: 'ตรวจคำตอบ (Audit)', icon: FileText },
-          { id: 'INTERVIEW', label: 'สัมภาษณ์ & บันทึก', icon: MessageSquare }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`spring-bounce flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                isActive
-                  ? 'bg-[#4A6B56] text-white shadow-sm'
-                  : 'text-[#58665E] hover:text-[#1F2823] hover:bg-white'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* STICKY TAB NAVIGATION (Zero-Scroll Section Switcher) */}
+      <div className="sticky top-0 z-30 bg-[#FAF7F2]/95 backdrop-blur-md py-2.5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-[#D6E2DA] mb-6 flex items-center justify-between gap-2 overflow-x-auto no-print">
+        <div className="flex items-center gap-1.5 shrink-0">
+          {[
+            { id: 'OVERVIEW', label: 'ภาพรวม (Overview)', icon: Layers },
+            { id: 'DOMAINS', label: '4 โดเมนหลัก', icon: Activity },
+            { id: 'DIMENSIONS', label: '14 มิติการรับมือ', icon: Brain },
+            { id: 'QUESTIONS', label: 'ตรวจคำตอบ (Audit)', icon: FileText },
+            { id: 'INTERVIEW', label: 'สัมภาษณ์ & บันทึก', icon: MessageSquare }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`spring-bounce flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#4A6B56] text-white shadow-sm ring-2 ring-[#4A6B56]/20'
+                    : 'text-[#58665E] hover:text-[#1F2823] bg-white border border-[#E2ECE5]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Compact Right Indicator in Sticky Nav */}
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <span className="text-[11px] font-bold text-[#6E7E74]">สถานะ:</span>
+          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${
+            status === 'APPROVED' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+            status === 'SHORTLISTED' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+            status === 'CONCERN' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+            status === 'NEEDS_INTERVIEW_PROBE' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+            'bg-[#FAF7F2] text-[#6E7E74] border-[#D6E2DA]'
+          }`}>
+            {status === 'APPROVED' ? 'อนุมัติรับเข้า' :
+             status === 'SHORTLISTED' ? 'ผ่านคัดเลือก' :
+             status === 'CONCERN' ? 'มีข้อกังวล' :
+             status === 'NEEDS_INTERVIEW_PROBE' ? 'สัมภาษณ์เจาะลึก' : 'รอตรวจสอบ'}
+          </span>
+        </div>
       </div>
 
       {/* TAB 1: OVERVIEW */}
@@ -395,8 +425,29 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
       {/* TAB 3: 14 DIMENSIONS BREAKDOWN */}
       {activeTab === 'DIMENSIONS' && (
         <div className="rounded-2xl p-5 sm:p-6 organic-card bg-white border border-[#D6E2DA]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4 pb-3 border-b border-[#EDF3EF]">
+            <div>
+              <h3 className="text-sm font-bold text-[#1F2823]">14 มิติการรับมือตาม Brief COPE</h3>
+              <p className="text-[11px] text-[#718278]">วิเคราะห์การตอบสนองเชิงพฤติกรรมในสถานการณ์ต่าง ๆ</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowOnlyRedFlags((prev) => !prev)}
+              className={`spring-bounce text-xs font-bold px-3 py-1.5 rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
+                showOnlyRedFlags
+                  ? 'bg-rose-50 border-rose-300 text-rose-800 shadow-sm'
+                  : 'bg-[#FAF7F2] border-[#D6E2DA] text-[#58665E] hover:text-[#1F2823]'
+              }`}
+            >
+              <span>🚩</span>
+              <span>{showOnlyRedFlags ? 'แสดงมิติทั้งหมด (14 มิติ)' : 'แสดงเฉพาะตัวบ่งชี้ความเสี่ยง (Red Flags)'}</span>
+            </button>
+          </div>
+
           <div className="space-y-2.5">
-            {candidate.dimensionResults.map((dim) => (
+            {candidate.dimensionResults
+              .filter((d) => !showOnlyRedFlags || d.isRedFlag)
+              .map((dim) => (
               <div
                 key={dim.id}
                 className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
@@ -574,6 +625,73 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* FLOATING DECISION DOCK (Zero-Scroll Instant Evaluation Bar) */}
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 w-[95%] max-w-2xl bg-white/95 backdrop-blur-md rounded-2xl border border-[#D6E2DA] p-2.5 sm:p-3 shadow-xl flex items-center justify-between gap-3 no-print">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="hidden sm:block truncate">
+            <div className="text-[10px] uppercase font-bold text-[#7E8F84]">ผู้สมัคร</div>
+            <div className="text-xs font-bold text-[#1F2823] truncate max-w-[140px]">{candidate.candidateName}</div>
+          </div>
+          <div className="hidden sm:block h-6 w-px bg-[#E2ECE5] mx-1" />
+          {/* Quick Rating Stars */}
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                title={`ให้ ${star} ดาว`}
+                className="p-1 hover:scale-110 transition-transform cursor-pointer"
+              >
+                <Star className={`w-4 h-4 ${rating >= star ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Status Select & Save Action */}
+        <div className="flex items-center gap-2">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="px-2.5 py-1.5 rounded-xl bg-[#FBF9F5] border border-[#D6E2DA] text-xs font-semibold text-[#1F2823] focus:outline-none"
+          >
+            <option value="UNREVIEWED">รอตรวจสอบ</option>
+            <option value="SHORTLISTED">ผ่านการคัดเลือก</option>
+            <option value="NEEDS_INTERVIEW_PROBE">สัมภาษณ์เจาะลึก</option>
+            <option value="APPROVED">อนุมัติรับเข้า</option>
+            <option value="CONCERN">มีข้อกังวล</option>
+          </select>
+
+          <button
+            type="button"
+            onClick={handleSaveNotes}
+            className="spring-bounce px-3.5 py-1.5 rounded-xl bg-[#D46B47] hover:bg-[#BF5A37] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+          >
+            {isSaved ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>บันทึกแล้ว</span>
+              </>
+            ) : (
+              <span>บันทึกผล</span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* DYNAMIC BACK TO TOP BUTTON */}
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-20 right-4 sm:right-8 z-40 p-2.5 rounded-2xl bg-[#4A6B56] text-white shadow-lg hover:bg-[#375241] transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer active:scale-95 animate-in fade-in duration-200 no-print"
+          title="กลับขึ้นบนสุด"
+        >
+          <ArrowUp className="w-4 h-4" />
+          <span className="hidden sm:inline">ขึ้นบนสุด</span>
+        </button>
       )}
     </div>
   );

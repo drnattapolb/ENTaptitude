@@ -278,6 +278,36 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Keyboard Shortcuts for Rapid Zero-Scroll Assessment (1-4, Arrow Keys)
+  React.useEffect(() => {
+    if (step !== 'QUESTIONS') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const targetTag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') return;
+
+      const key = e.key.toLowerCase();
+      if (key === '1' || key === 'a') {
+        selectOptionStatus('A', 'cycle');
+      } else if (key === '2' || key === 'b') {
+        selectOptionStatus('B', 'cycle');
+      } else if (key === '3' || key === 'c') {
+        selectOptionStatus('C', 'cycle');
+      } else if (key === '4' || key === 'd') {
+        selectOptionStatus('D', 'cycle');
+      } else if (key === 'arrowright' || (key === 'enter' && isCurrentSetValid)) {
+        if (isCurrentSetValid) {
+          handleNext();
+        }
+      } else if (key === 'arrowleft') {
+        handlePrev();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [step, isCurrentSetValid, currentIndex]);
+
   // -------------------------------------------------------------
   // STEP 1: NAME INPUT (Minimal & Fast)
   // -------------------------------------------------------------
@@ -603,12 +633,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   }
 
   // -------------------------------------------------------------
-  // STEP 3: QUESTIONS (Sets 1 to 7) - Ultra-Friendly Touch UX
+  // STEP 3: QUESTIONS (Sets 1 to 7) - Zero-Scroll Bento Grid UX
   // -------------------------------------------------------------
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto flex flex-col justify-between">
+    <div className="min-h-[calc(100vh-4.5rem)] py-3 sm:py-5 px-3 sm:px-6 lg:px-8 max-w-4xl mx-auto flex flex-col justify-between">
       {/* Top Header & Visual Stepper */}
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#EBF2ED] text-[#375241] border border-[#C6D8CC]">
@@ -651,7 +681,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-[#E2ECE5] rounded-full h-2 overflow-hidden mb-3">
+        <div className="w-full bg-[#E2ECE5] rounded-full h-1.5 sm:h-2 overflow-hidden mb-2.5">
           <div
             className="bg-[#4A6B56] h-full rounded-full transition-all duration-300"
             style={{ width: `${((currentIndex + 1) / 7) * 100}%` }}
@@ -659,12 +689,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
         </div>
 
         {/* Live Touch Selection Tracker (Very Friendly Status Pill) */}
-        <div className="p-3 sm:p-3.5 rounded-2xl bg-white border border-[#D6E2DA] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-[#D6E2DA] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-bold text-[#2C3831] text-[11px] sm:text-xs">สถานะชุดนี้:</span>
 
             {/* Blue Status */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all ${
               blueOption
                 ? 'bg-sky-50 border-sky-300 text-sky-900 shadow-sm'
                 : 'bg-[#FAF7F2] border-dashed border-[#CCD8D0] text-[#7E8F84]'
@@ -684,7 +714,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
             </div>
 
             {/* Red Status */}
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all ${
               redOption
                 ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-sm'
                 : 'bg-[#FAF7F2] border-dashed border-[#CCD8D0] text-[#7E8F84]'
@@ -718,23 +748,25 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       </div>
 
       {/* Main Question Scenario & 4 Options */}
-      <div className="space-y-3.5 mb-6">
+      <div className="space-y-2.5 mb-3">
         {/* Scenario Box */}
-        <div className="rounded-2xl p-5 bg-white organic-card border border-[#D6E2DA] shadow-sm">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#4A6B56] mb-1">
+        <div className="rounded-xl sm:rounded-2xl p-3 sm:p-4 bg-white organic-card border border-[#D6E2DA] shadow-xs">
+          <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#4A6B56] mb-0.5">
             {currentSet.title}
           </div>
-          <h3 className="text-sm sm:text-base font-bold text-[#1F2823] leading-relaxed">
+          <h3 className="text-xs sm:text-sm font-bold text-[#1F2823] leading-snug sm:leading-relaxed">
             {currentSet.scenario}
           </h3>
-          <p className="text-[11px] text-[#718278] mt-2 flex items-center gap-1.5 font-medium">
-            <span>💡</span>
-            <span>ระบบคุมให้เลือกข้อที่เป็นตัวท่าน <strong>มากที่สุด 1 ข้อ</strong> และ <strong>น้อยที่สุด 1 ข้อ</strong> • แตะที่ปุ่มหรือตัวการ์ดเพื่อเลือกได้ทันที</span>
+          <p className="text-[11px] text-[#718278] mt-1.5 flex flex-wrap items-center justify-between gap-1 font-medium">
+            <span>💡 เลือกข้อที่เป็นตัวท่าน <strong>มากที่สุด 1 ข้อ</strong> และ <strong>น้อยที่สุด 1 ข้อ</strong></span>
+            <span className="hidden md:inline-flex items-center gap-1 text-[10px] text-[#4A6B56] bg-[#EBF2ED] px-2 py-0.5 rounded-md border border-[#C6D8CC]">
+              <span>⌨️ คีย์ลัด: กด [1-4] เลือกข้อ • [Enter/➔] ถัดไป</span>
+            </span>
           </p>
         </div>
 
-        {/* 4 Large Touch-Friendly Custom Pressable Option Cards */}
-        <div className="grid grid-cols-1 gap-3.5">
+        {/* 4 Compact, Streamlined Option Cards (2x2 Grid on Tablet/Desktop, 1 Col on Mobile) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-2.5">
           {currentSet.options.map((opt) => {
             const optState = currentSetState.options.find((o) => o.id === opt.id);
             const status = optState?.status || 'none';
@@ -748,106 +780,90 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleOptionTap(opt.id)}
-                className={`group relative rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer select-none border flex flex-col justify-between gap-3.5 ${
+                className={`group relative rounded-xl sm:rounded-2xl p-2.5 sm:p-3 transition-all duration-150 cursor-pointer select-none border flex flex-col justify-between gap-2 shadow-xs ${
                   isMost
-                    ? 'bg-gradient-to-br from-sky-50 via-sky-50/70 to-white border-2 border-sky-500 ring-4 ring-sky-100 shadow-md shadow-sky-500/15'
+                    ? 'bg-sky-50/80 border-sky-500 ring-2 ring-sky-200 shadow-xs'
                     : isLeast
-                    ? 'bg-gradient-to-br from-rose-50 via-rose-50/70 to-white border-2 border-rose-500 ring-4 ring-rose-100 shadow-md shadow-rose-500/15'
-                    : 'bg-white border border-[#D6E2DA] hover:border-[#4A6B56]/60 hover:bg-[#FAFDFB] text-[#2C3831] shadow-sm'
+                    ? 'bg-rose-50/80 border-rose-500 ring-2 ring-rose-200 shadow-xs'
+                    : 'bg-white border-[#D6E2DA] hover:border-[#4A6B56]/50 hover:bg-[#FAFDFB]'
                 }`}
               >
-                {/* Top Section: Option Identifier + Content */}
-                <div className="flex items-start gap-3.5">
-                  <span
-                    className={`w-9 h-9 rounded-xl font-bold font-mono text-sm shrink-0 flex items-center justify-center transition-all duration-200 ${
-                      isMost
-                        ? 'bg-sky-500 text-white shadow-md shadow-sky-500/30 ring-2 ring-sky-300'
-                        : isLeast
-                        ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30 ring-2 ring-rose-300'
-                        : 'bg-[#FAF7F2] text-[#58665E] border border-[#D6E2DA]'
-                    }`}
-                  >
-                    {opt.id}
-                  </span>
-
-                  <div className="flex-1">
-                    <p className={`text-xs sm:text-sm leading-relaxed transition-colors ${
-                      isMost ? 'font-bold text-sky-950' : isLeast ? 'font-bold text-rose-950' : 'text-[#2C3831]'
-                    }`}>
-                      {opt.text}
-                    </p>
-
-                    {/* Active State Chip Indicator with High-Contrast Icons */}
-                    <div className="mt-2.5 flex items-center gap-2">
-                      {isMost && (
-                        <span className="text-xs font-bold text-sky-900 bg-sky-100 border border-sky-300 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-sky-600 stroke-[2.5]" />
-                          <span>เป็นตัวท่านมากที่สุด</span>
-                        </span>
-                      )}
-                      {isLeast && (
-                        <span className="text-xs font-bold text-rose-900 bg-rose-100 border border-rose-300 px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-rose-600 stroke-[2.5]" />
-                          <span>เป็นตัวท่านน้อยที่สุด</span>
-                        </span>
-                      )}
-                      {!isMost && !isLeast && (
-                        <span className="text-[11px] text-[#88998E] font-medium flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-gray-300" />
-                          <span>ปานกลาง</span>
-                        </span>
-                      )}
-                    </div>
+                {/* Content Row: Letter Badge + Text */}
+                <div className="flex items-start gap-2.5">
+                  <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                    <span
+                      className={`w-6 h-6 sm:w-6.5 sm:h-6.5 rounded-lg font-bold font-mono text-xs flex items-center justify-center transition-all ${
+                        isMost
+                          ? 'bg-sky-500 text-white shadow-xs'
+                          : isLeast
+                          ? 'bg-rose-500 text-white shadow-xs'
+                          : 'bg-[#F4EFEA] text-[#4A5750] border border-[#D6E2DA]'
+                      }`}
+                    >
+                      {opt.id}
+                    </span>
+                    <span
+                      className="hidden lg:inline-flex text-[9px] font-mono text-[#718278] bg-[#F0F5F2] border border-[#D6E2DA] px-1 py-0.2 rounded"
+                      title={`กดเลข [${opt.id === 'A' ? '1' : opt.id === 'B' ? '2' : opt.id === 'C' ? '3' : '4'}] บนแป้นพิมพ์`}
+                    >
+                      {opt.id === 'A' ? '1' : opt.id === 'B' ? '2' : opt.id === 'C' ? '3' : '4'}
+                    </span>
                   </div>
+
+                  <p className={`text-xs sm:text-[13px] leading-snug sm:leading-relaxed transition-colors flex-1 ${
+                    isMost ? 'font-semibold text-sky-950' : isLeast ? 'font-semibold text-rose-950' : 'text-[#2C3831]'
+                  }`}>
+                    {opt.text}
+                  </p>
                 </div>
 
-                {/* Bottom Section: Large Touch-Friendly Custom Pressable Toggle Areas (No Checkboxes) */}
-                <div className="pt-2.5 border-t border-black/5 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  {/* Custom Pressable: Most (Blue) */}
-                  <button
-                    type="button"
-                    onClick={(e) => handleSetMost(opt.id, e)}
-                    className={`min-h-[46px] flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer ${
-                      isMost
-                        ? 'bg-sky-500 hover:bg-sky-600 text-white ring-2 ring-sky-300 shadow-md shadow-sky-500/25'
-                        : 'bg-sky-50/90 hover:bg-sky-100 text-sky-800 border border-sky-200 hover:border-sky-300'
-                    }`}
-                  >
+                {/* Bottom Inline Action Bar: Clean status indicator + Side-by-side compact toggle buttons */}
+                <div className="pt-1.5 border-t border-black/[0.04] flex items-center justify-between gap-1.5">
+                  {/* Subtle Status Label */}
+                  <div className="min-w-0 flex items-center">
                     {isMost ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
-                        <span>✓ เลือกเป็นตัวท่านมากที่สุด</span>
-                      </>
+                      <span className="text-[10px] sm:text-[11px] font-bold text-sky-800 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-sky-600 stroke-[2.5]" />
+                        <span className="truncate">มากที่สุด</span>
+                      </span>
+                    ) : isLeast ? (
+                      <span className="text-[10px] sm:text-[11px] font-bold text-rose-800 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-rose-600 stroke-[2.5]" />
+                        <span className="truncate">น้อยที่สุด</span>
+                      </span>
                     ) : (
-                      <>
-                        <span className="w-3 h-3 rounded-full border-2 border-sky-400 bg-sky-100 shrink-0" />
-                        <span>+ เลือก: มากที่สุด</span>
-                      </>
+                      <span className="text-[10px] text-[#88998E]">แตะเพื่อเลือก</span>
                     )}
-                  </button>
+                  </div>
 
-                  {/* Custom Pressable: Least (Red) */}
-                  <button
-                    type="button"
-                    onClick={(e) => handleSetLeast(opt.id, e)}
-                    className={`min-h-[46px] flex-1 py-2.5 px-3.5 rounded-xl text-xs font-bold transition-all duration-150 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer ${
-                      isLeast
-                        ? 'bg-rose-500 hover:bg-rose-600 text-white ring-2 ring-rose-300 shadow-md shadow-rose-500/25'
-                        : 'bg-rose-50/90 hover:bg-rose-100 text-rose-800 border border-rose-200 hover:border-rose-300'
-                    }`}
-                  >
-                    {isLeast ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
-                        <span>✓ เลือกเป็นตัวท่านน้อยที่สุด</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-3 h-3 rounded-full border-2 border-rose-400 bg-rose-100 shrink-0" />
-                        <span>+ เลือก: น้อยที่สุด</span>
-                      </>
-                    )}
-                  </button>
+                  {/* Compact Side-by-Side Action Buttons */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetMost(opt.id, e)}
+                      className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-all duration-150 flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer ${
+                        isMost
+                          ? 'bg-sky-500 hover:bg-sky-600 text-white shadow-sky-500/20'
+                          : 'bg-white hover:bg-sky-50 text-sky-700 border border-sky-200/90 hover:border-sky-300'
+                      }`}
+                    >
+                      {isMost && <CheckCircle2 className="w-3 h-3 text-white stroke-[2.5]" />}
+                      <span>มากที่สุด</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleSetLeast(opt.id, e)}
+                      className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-all duration-150 flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer ${
+                        isLeast
+                          ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
+                          : 'bg-white hover:bg-rose-50 text-rose-700 border border-rose-200/90 hover:border-rose-300'
+                      }`}
+                    >
+                      {isLeast && <CheckCircle2 className="w-3 h-3 text-white stroke-[2.5]" />}
+                      <span>น้อยที่สุด</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -856,7 +872,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
 
         {/* Validation Warning */}
         {validationWarning && (
-          <div className="text-xs text-rose-900 bg-rose-50 border border-rose-300 p-3.5 rounded-2xl flex items-center gap-2.5 animate-in shake duration-200 shadow-sm">
+          <div className="text-xs text-rose-900 bg-rose-50 border border-rose-300 p-2.5 sm:p-3 rounded-xl flex items-center gap-2 animate-in shake duration-200 shadow-sm">
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
             <span className="font-bold">{validationWarning}</span>
           </div>
