@@ -1,0 +1,6 @@
+{
+  "name": "ResiCope - Resident Situational Judgment & Clinical Practice Survey",
+  "description": "Resident clinical practice and situational survey portal for medical residency applicants and faculty committee.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

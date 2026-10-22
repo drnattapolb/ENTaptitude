@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-cream: #FAF7F2;
+    --sage-primary: #4A6B56;
+    --sage-light: #EBF2ED;
+    --sage-dark: #375241;
+    --terracotta: #D46B47;
+    --terracotta-hover: #BF5A37;
+    --text-primary: #1F2823;
+    --text-secondary: #58665E;
+  }
+
+  body {
+    background-color: #FAF7F2;
+    color: #1F2823;
+    font-family: 'Outfit', 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Warm Organic Floating Cards & Glows */
+.organic-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(214, 226, 218, 0.8);
+  box-shadow: 0 8px 24px -4px rgba(74, 107, 86, 0.07), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+  border-radius: 1.5rem;
+}
+
+.organic-card-hover {
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.organic-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -6px rgba(74, 107, 86, 0.13), 0 6px 16px -2px rgba(0, 0, 0, 0.04);
+  border-color: rgba(94, 130, 108, 0.5);
+}
+
+.spring-bounce {
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.spring-bounce:hover {
+  transform: translateY(-2px) scale(1.015);
+}
+
+.spring-bounce:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Custom Scrollbar for Warm Theme */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #C4D4C9;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9BB3A2;
+}
+
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .organic-card {
+    box-shadow: none !important;
+    border: 1px solid #D1D5DB !important;
+  }
+}
