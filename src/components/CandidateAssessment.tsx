@@ -220,11 +220,11 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   const handleNext = () => {
     if (!isCurrentSetValid) {
       if (mostCount === 0 && leastCount === 0) {
-        setValidationWarning('กรุณาเลือก ฟ้า 1 ข้อ (มากที่สุด) และ แดง 1 ข้อ (น้อยที่สุด)');
+        setValidationWarning('กรุณาเลือก ข้อที่เป็นตัวท่านมากที่สุด 1 ข้อ และน้อยที่สุด 1 ข้อ');
       } else if (mostCount === 0) {
-        setValidationWarning('ยังไม่ได้เลือก "สีฟ้า" (มากที่สุด)');
+        setValidationWarning('ยังไม่ได้เลือกข้อที่ "เป็นตัวท่านมากที่สุด"');
       } else if (leastCount === 0) {
-        setValidationWarning('ยังไม่ได้เลือก "สีแดง" (น้อยที่สุด)');
+        setValidationWarning('ยังไม่ได้เลือกข้อที่ "เป็นตัวท่านน้อยที่สุด"');
       }
       return;
     }
@@ -253,7 +253,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       const m = set.options.find((o) => o.status === 'most')?.id;
       const l = set.options.find((o) => o.status === 'least')?.id;
       if (!m || !l || m === l) {
-        setValidationWarning(`ชุดที่ ${set.setId} ยังเลือกไม่ครบ (ต้องมี ฟ้า 1 ข้อ และ แดง 1 ข้อ)`);
+        setValidationWarning(`ชุดที่ ${set.setId} ยังเลือกไม่ครบ (ต้องมีข้อมากที่สุด 1 ข้อ และน้อยที่สุด 1 ข้อ)`);
         setCurrentIndex(i);
         setStep('QUESTIONS');
         return;
@@ -410,12 +410,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                   1
                 </span>
                 <div>
-                  <div className="text-xs font-bold text-sky-950">เลือกกล่องสีฟ้า</div>
-                  <div className="text-[11px] text-sky-800">ข้อที่เป็นตัวท่านมากที่สุด (1 ข้อ)</div>
+                  <div className="text-xs font-bold text-sky-950">เป็นตัวท่านมากที่สุด</div>
+                  <div className="text-[11px] text-sky-800">เลือก 1 ข้อความที่ตรงกับพฤติกรรมจริงของท่านมากที่สุด</div>
                 </div>
               </div>
               <span className="text-xs font-bold text-sky-700 bg-sky-100 px-2.5 py-1 rounded-lg">
-                มากที่สุด
+                มากที่สุด (1 ข้อ)
               </span>
             </div>
 
@@ -426,12 +426,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                   2
                 </span>
                 <div>
-                  <div className="text-xs font-bold text-rose-950">เลือกกล่องสีแดง</div>
-                  <div className="text-[11px] text-rose-800">ข้อที่เป็นตัวท่านน้อยที่สุด (1 ข้อ)</div>
+                  <div className="text-xs font-bold text-rose-950">เป็นตัวท่านน้อยที่สุด</div>
+                  <div className="text-[11px] text-rose-800">เลือก 1 ข้อความที่ตรงกับพฤติกรรมจริงของท่านน้อยที่สุด</div>
                 </div>
               </div>
               <span className="text-xs font-bold text-rose-700 bg-rose-100 px-2.5 py-1 rounded-lg">
-                น้อยที่สุด
+                น้อยที่สุด (1 ข้อ)
               </span>
             </div>
 
@@ -447,7 +447,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                 </div>
               </div>
               <span className="text-xs font-bold text-[#4A6B56] bg-[#EBF2ED] px-2.5 py-1 rounded-lg">
-                ปานกลาง
+                ปานกลาง (2 ข้อ)
               </span>
             </div>
           </div>
@@ -455,7 +455,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
           {/* Quick Notice Badge */}
           <div className="p-3 rounded-xl bg-[#F8ECE8] border border-[#E9C5B9] text-xs text-[#A64525] flex items-center gap-2 mb-6 font-medium">
             <AlertCircle className="w-4 h-4 shrink-0 text-[#D46B47]" />
-            <span>แต่ละชุดต้องมี <strong>ฟ้า 1 ข้อ</strong> และ <strong>แดง 1 ข้อ</strong> จึงจะไปข้อถัดไปได้</span>
+            <span>แต่ละชุดต้องเลือก <strong>มากที่สุด 1 ข้อ</strong> และ <strong>น้อยที่สุด 1 ข้อ</strong> จึงจะไปชุดถัดไปได้</span>
           </div>
 
           {/* Action Buttons */}
@@ -670,13 +670,13 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                 : 'bg-[#FAF7F2] border-dashed border-[#CCD8D0] text-[#7E8F84]'
             }`}>
               <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${blueOption ? 'bg-sky-500' : 'bg-gray-300'}`} />
-              <span>มากที่สุด (ฟ้า): {blueOption ? `ข้อ ${blueOption}` : 'ยังไม่เลือก'}</span>
+              <span>มากที่สุด: {blueOption ? `ข้อ ${blueOption}` : 'ยังไม่เลือก'}</span>
               {blueOption && (
                 <button
                   type="button"
                   onClick={() => handleClearOption('most')}
                   className="ml-1 text-sky-600 hover:text-sky-900 hover:bg-sky-100 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                  title="ยกเลิกสีฟ้านี้"
+                  title="ยกเลิกข้อมากที่สุด"
                 >
                   ✕
                 </button>
@@ -690,13 +690,13 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                 : 'bg-[#FAF7F2] border-dashed border-[#CCD8D0] text-[#7E8F84]'
             }`}>
               <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${redOption ? 'bg-rose-500' : 'bg-gray-300'}`} />
-              <span>น้อยที่สุด (แดง): {redOption ? `ข้อ ${redOption}` : 'ยังไม่เลือก'}</span>
+              <span>น้อยที่สุด: {redOption ? `ข้อ ${redOption}` : 'ยังไม่เลือก'}</span>
               {redOption && (
                 <button
                   type="button"
                   onClick={() => handleClearOption('least')}
                   className="ml-1 text-rose-600 hover:text-rose-900 hover:bg-rose-100 rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                  title="ยกเลิกสีแดงนี้"
+                  title="ยกเลิกข้อน้อยที่สุด"
                 >
                   ✕
                 </button>
@@ -729,7 +729,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
           </h3>
           <p className="text-[11px] text-[#718278] mt-2 flex items-center gap-1.5 font-medium">
             <span>💡</span>
-            <span>ระบบคุมให้เลือก <strong>ฟ้า 1 ข้อ</strong> (มากที่สุด) และ <strong>แดง 1 ข้อ</strong> (น้อยที่สุด) • แตะที่ปุ่มหรือตัวการ์ดเพื่อเลือกได้ทันที</span>
+            <span>ระบบคุมให้เลือกข้อที่เป็นตัวท่าน <strong>มากที่สุด 1 ข้อ</strong> และ <strong>น้อยที่สุด 1 ข้อ</strong> • แตะที่ปุ่มหรือตัวการ์ดเพื่อเลือกได้ทันที</span>
           </p>
         </div>
 
@@ -816,12 +816,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                     {isMost ? (
                       <>
                         <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
-                        <span>✓ เลือกเป็นสีฟ้าแล้ว (มากที่สุด)</span>
+                        <span>✓ เลือกเป็นตัวท่านมากที่สุด</span>
                       </>
                     ) : (
                       <>
                         <span className="w-3 h-3 rounded-full border-2 border-sky-400 bg-sky-100 shrink-0" />
-                        <span>+ เลือกเป็นสีฟ้า (มากที่สุด)</span>
+                        <span>+ เลือก: มากที่สุด</span>
                       </>
                     )}
                   </button>
@@ -839,12 +839,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                     {isLeast ? (
                       <>
                         <CheckCircle2 className="w-4 h-4 text-white stroke-[2.5]" />
-                        <span>✓ เลือกเป็นสีแดงแล้ว (น้อยที่สุด)</span>
+                        <span>✓ เลือกเป็นตัวท่านน้อยที่สุด</span>
                       </>
                     ) : (
                       <>
                         <span className="w-3 h-3 rounded-full border-2 border-rose-400 bg-rose-100 shrink-0" />
-                        <span>+ เลือกเป็นสีแดง (น้อยที่สุด)</span>
+                        <span>+ เลือก: น้อยที่สุด</span>
                       </>
                     )}
                   </button>
@@ -882,14 +882,14 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
           {isCurrentSetValid ? (
             <span className="text-[#2D5C39] bg-[#E3EFE6] px-3 py-1.5 rounded-xl border border-[#B8D7C0] flex items-center gap-1.5 shadow-sm">
               <CheckCircle2 className="w-4 h-4 text-[#2D5C39]" />
-              <span>ครบถ้วน (ฟ้า 1 • แดง 1)</span>
+              <span>ครบถ้วน (มากที่สุด 1 • น้อยที่สุด 1)</span>
             </span>
           ) : (
             <span className="text-[#D46B47] bg-[#F8ECE8] px-3 py-1.5 rounded-xl border border-[#E9C5B9] flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5 text-[#D46B47]" />
-              {!blueOption && !redOption && 'กรุณาเลือก ฟ้า 1 และ แดง 1'}
-              {!blueOption && redOption && 'ยังขาดสีฟ้า (มากที่สุด)'}
-              {blueOption && !redOption && 'ยังขาดสีแดง (น้อยที่สุด)'}
+              {!blueOption && !redOption && 'กรุณาเลือก มากที่สุด 1 และ น้อยที่สุด 1'}
+              {!blueOption && redOption && 'ยังไม่ได้เลือกข้อ "มากที่สุด"'}
+              {blueOption && !redOption && 'ยังไม่ได้เลือกข้อ "น้อยที่สุด"'}
               {blueOption && redOption && blueOption === redOption && 'ห้ามเลือกข้อเดียวกัน'}
             </span>
           )}

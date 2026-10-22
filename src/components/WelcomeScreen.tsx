@@ -87,11 +87,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             <div className="space-y-2 mb-6 text-xs">
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 font-medium">
                 <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
-                <span>เลือกสีฟ้า: <strong className="font-bold text-sky-700">เป็นตัวท่านมากที่สุด</strong></span>
+                <span>1 ข้อ: <strong className="font-bold text-sky-700">เป็นตัวท่านมากที่สุด</strong></span>
               </div>
               <div className="flex items-center gap-2.5 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 font-medium">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                <span>เลือกสีแดง: <strong className="font-bold text-rose-700">เป็นตัวท่านน้อยที่สุด</strong></span>
+                <span>1 ข้อ: <strong className="font-bold text-rose-700">เป็นตัวท่านน้อยที่สุด</strong></span>
               </div>
             </div>
           </div>
