@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   ArrowRight,
@@ -11,12 +11,14 @@ import {
   Award,
   Sparkles,
   RotateCcw,
-  Check
+  Check,
+  Clock
 } from 'lucide-react';
 import { QUESTION_SETS } from '../data/assessmentData';
-import { OptionKey } from '../types/assessment';
+import { CandidateAssessmentResult, OptionKey } from '../types/assessment';
 import { calculateCandidateResult } from '../utils/scoring';
 import { saveCandidateResult } from '../data/mockCandidates';
+import { ResultDashboard } from './ResultDashboard';
 
 interface CandidateAssessmentProps {
   onComplete: () => void;
@@ -65,6 +67,19 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
 
   const [validationWarning, setValidationWarning] = useState<string | null>(null);
   const [submissionId, setSubmissionId] = useState<string>('');
+  const [finalResult, setFinalResult] = useState<CandidateAssessmentResult | null>(null);
+
+  // Zen Timer Mode (Reduces Test Anxiety)
+  const [isZenMode, setIsZenMode] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (step !== 'QUESTIONS') return;
+    const interval = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step]);
 
   const currentSet = QUESTION_SETS[currentIndex];
   const currentSetState = setsState[currentIndex] || {
@@ -273,6 +288,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     });
 
     saveCandidateResult(result);
+    setFinalResult(result);
     setSubmissionId(result.id);
     setStep('SUCCESS');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -590,45 +606,14 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   }
 
   // -------------------------------------------------------------
-  // STEP 5: SUCCESS RECEIPT (Clean & Impactful)
+  // STEP 5: SUCCESS & RPG INFOGRAPHIC RESULT DASHBOARD
   // -------------------------------------------------------------
-  if (step === 'SUCCESS') {
+  if (step === 'SUCCESS' && finalResult) {
     return (
-      <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-[28px] organic-card p-6 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EBF2ED] border border-[#C6D8CC] flex items-center justify-center text-[#4A6B56] mb-3 shadow-sm">
-            <CheckCircle2 className="w-7 h-7" />
-          </div>
-
-          <h2 className="text-xl font-bold text-[#1F2823] mb-1">บันทึกแบบสำรวจเรียบร้อย</h2>
-          <p className="text-xs text-[#58665E] mb-5">
-            ขอบคุณที่ให้ความร่วมมือในการตอบแบบสำรวจ
-          </p>
-
-          <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E2ECE5] text-left mb-6 space-y-2 text-xs">
-            <div className="flex justify-between py-1 border-b border-[#E2ECE5]">
-              <span className="text-[#6E7E74]">รหัสอ้างอิง:</span>
-              <span className="font-mono font-bold text-[#375241]">{submissionId}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#E2ECE5]">
-              <span className="text-[#6E7E74]">ผู้สมัคร:</span>
-              <span className="font-bold text-[#1F2823]">{candidateName}</span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-[#6E7E74]">สาขาวิชา:</span>
-              <span className="text-[#1F2823]">{specialty}</span>
-            </div>
-          </div>
-
-          <button
-            onClick={onExit}
-            className="spring-bounce w-full py-3.5 px-6 rounded-xl bg-[#4A6B56] hover:bg-[#375241] text-white font-bold text-xs shadow-md shadow-[#4A6B56]/20 transition-all flex items-center justify-center gap-2"
-          >
-            <Home className="w-4 h-4" />
-            <span>เสร็จสิ้นและกลับหน้าหลัก</span>
-          </button>
-        </div>
-      </div>
+      <ResultDashboard
+        candidate={finalResult}
+        onExit={onExit}
+      />
     );
   }
 
@@ -644,6 +629,24 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#EBF2ED] text-[#375241] border border-[#C6D8CC]">
               ชุดที่ {currentSet.id} จาก 7
             </span>
+
+            {/* Zen Timer Mode (Reduces Test Anxiety) */}
+            <button
+              type="button"
+              onClick={() => setIsZenMode(!isZenMode)}
+              className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full border border-[#D6E2DA] bg-white text-[#58665E] hover:text-[#1F2823] transition-colors shadow-xs cursor-pointer"
+              title={isZenMode ? "แตะเพื่อแสดงเวลา" : "แตะเพื่อเปิด Zen Mode (ซ่อนตัวจับเวลาเพื่อลดความกังวล)"}
+            >
+              {isZenMode ? (
+                <span>🧘 Zen Mode</span>
+              ) : (
+                <>
+                  <Clock className="w-3 h-3 text-[#4A6B56]" />
+                  <span>{Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}</span>
+                </>
+              )}
+            </button>
+
             <span className="text-xs text-[#6E7E74] hidden sm:inline">
               • {candidateName}
             </span>
@@ -763,6 +766,14 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
               <span>⌨️ คีย์ลัด: กด [1-4] เลือกข้อ • [Enter/➔] ถัดไป</span>
             </span>
           </p>
+        </div>
+
+        {/* Normative Validation Banner (Reduces Response Bias & Enhances Psychological Safety) */}
+        <div className="rounded-xl p-2.5 sm:p-3 bg-gradient-to-r from-emerald-50/80 via-teal-50/60 to-sky-50/80 border border-emerald-200/90 shadow-xs flex items-center gap-2.5 text-xs text-slate-700">
+          <span className="text-base shrink-0">💡</span>
+          <span className="leading-relaxed">
+            <strong className="text-[#2D5C39]">เกณฑ์การตอบเพื่อความสบายใจ:</strong> ภายใต้สภาวะความเครียดสะสม แพทย์ส่วนใหญ่อาจมีพฤติกรรมหลายรูปแบบผสมผสานกัน ไม่มีข้อใดผิดหรือถูก
+          </span>
         </div>
 
         {/* 4 Compact, Streamlined Option Cards (2x2 Grid on Tablet/Desktop, 1 Col on Mobile) */}

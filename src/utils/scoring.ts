@@ -208,6 +208,9 @@ export function calculateCandidateResult(
   const sortedDomains = [...domainResults].sort((a, b) => b.percentage - a.percentage);
   const primaryDominantDomain = sortedDomains[0].name;
 
+  // Generate RPG Profile (Ragnarok Infographic Engine)
+  const rpgProfile = generateRpgProfile(dimensionResults, redFlagAnalysis);
+
   return {
     id: `CAND-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 899 + 100)}`,
     candidateName,
@@ -221,9 +224,342 @@ export function calculateCandidateResult(
     redFlagAnalysis,
     totalScore: 28,
     primaryDominantDomain,
+    rpgProfile,
     committeeStatus: tier === 'HIGH' ? 'NEEDS_INTERVIEW_PROBE' : 'UNREVIEWED'
   };
 }
+
+export function generateRpgProfile(
+  dimensionResults: DimensionResult[],
+  redFlagAnalysis: RedFlagAnalysis
+) {
+  const dimMap = new Map(dimensionResults.map((d) => [d.id, d.score]));
+
+  // 1. Calculate 5 RPG Stats
+  // STR: Active Coping (1) + Planning (2) -> max 8
+  const strScore = (dimMap.get(1) ?? 0) + (dimMap.get(2) ?? 0);
+  const strPercent = Math.min(100, Math.round((strScore / 8) * 100));
+
+  // INT: Instrumental Support (3) -> max 4
+  const intScore = dimMap.get(3) ?? 0;
+  const intPercent = Math.min(100, Math.round((intScore / 4) * 100));
+
+  // VIT: Positive Reframing (4) + Acceptance (5) + Emotional Support (6) -> max 12
+  const vitScore = (dimMap.get(4) ?? 0) + (dimMap.get(5) ?? 0) + (dimMap.get(6) ?? 0);
+  const vitPercent = Math.min(100, Math.round((vitScore / 12) * 100));
+
+  // DEX: Humor (7) + Religion (8) + Self-distraction (9) -> max 12
+  const dexScore = (dimMap.get(7) ?? 0) + (dimMap.get(8) ?? 0) + (dimMap.get(9) ?? 0);
+  const dexPercent = Math.min(100, Math.round((dexScore / 12) * 100));
+
+  // DRAIN: Denial (10) + Venting (11) + Substance (12) + Disengagement (13) + Self-blame (14) -> max 20
+  const drainScore = redFlagAnalysis.score;
+  const drainPercent = Math.min(100, Math.round((drainScore / 20) * 100));
+
+  const stats = {
+    STR: {
+      key: 'STR' as const,
+      name: 'Strength (Task Execution)',
+      thaiName: 'การแก้ปัญหาเชิงรุก & วางแผน (STR)',
+      score: strScore,
+      maxScore: 8,
+      percentage: strPercent,
+      description: 'พลังในการลงมือแก้ปัญหาเฉพาะหน้า การวางแผนขั้นตอนผ่าตัด และความเด็ดขาดในภาวะวิกฤต',
+      color: '#06B6D4'
+    },
+    INT: {
+      key: 'INT' as const,
+      name: 'Intelligence (Team Network)',
+      thaiName: 'การแสวงหาคำปรึกษา & เครือข่าย (INT)',
+      score: intScore,
+      maxScore: 4,
+      percentage: intPercent,
+      description: 'ทักษะการขอคำปรึกษาทางวิชาชีพ การประสานงาน และความร่วมมือกับทีมแพทย์ในห้องผ่าตัด',
+      color: '#3B82F6'
+    },
+    VIT: {
+      key: 'VIT' as const,
+      name: 'Vitality (Emotional Shield)',
+      thaiName: 'เกราะยืดหยุ่น & ปรับมุมมองบวก (VIT)',
+      score: vitScore,
+      maxScore: 12,
+      percentage: vitPercent,
+      description: 'ความยืดหยุ่นทางอารมณ์ การมองอุปสรรคเป็นโอกาสเรียนรู้ และการยอมรับความเป็นจริง',
+      color: '#10B981'
+    },
+    DEX: {
+      key: 'DEX' as const,
+      name: 'Dexterity (Rest & Morale)',
+      thaiName: 'อารมณ์ขัน & การพักฟื้นจิตใจ (DEX)',
+      score: dexScore,
+      maxScore: 12,
+      percentage: dexPercent,
+      description: 'ความว่องไวในการสลับโหมดพักสมอง การใช้อารมณ์ขันคลายตึงเครียด และจุดยึดเหนี่ยวใจ',
+      color: '#F59E0B'
+    },
+    DRAIN: {
+      key: 'DRAIN' as const,
+      name: 'Energy Drain (Stress Indicator)',
+      thaiName: 'ดัชนีภาระความเครียดสะสม (DRAIN 🚩)',
+      score: drainScore,
+      maxScore: 20,
+      percentage: drainPercent,
+      description: 'สัญญาณเตือนของภาวะเหนื่อยล้าสะสม การโทษตนเอง หรือความเสี่ยงต่อภาวะหมดไฟ (Burnout)',
+      color: '#F43F5E'
+    }
+  };
+
+  // 2. Determine Archetype
+  let archetype;
+  if (drainScore >= 13) {
+    archetype = {
+      key: 'OVERLOADED_CRUSADER' as const,
+      badge: '⚡',
+      title: 'The Overloaded Crusader',
+      thaiTitle: 'นักรบภาวะล้าสะสม',
+      description: 'มีความมุ่งมั่นทุ่มเทสูงและแบกรับความรับผิดชอบไว้เต็มกำลัง แม้มีศักยภาพสูงแต่เริ่มมีสัญญาณเตือนของพลังงานที่ลดลง',
+      subtext: 'จิตแพทย์แนะนำ: เป็นผู้ที่มีไฟในการทำงานสูงมาก แต่จำเป็นต้องจัดเวลาพักฟื้นและลดการแบกรับปัญหาไว้เพียงลำพัง',
+      color: '#F43F5E',
+      glowColor: 'rgba(244, 63, 94, 0.4)'
+    };
+  } else if (strPercent >= intPercent && strPercent >= vitPercent && strPercent >= dexPercent) {
+    archetype = {
+      key: 'TACTICAL_MASTER' as const,
+      badge: '🎖️',
+      title: 'The Tactical Master',
+      thaiTitle: 'นักวางแผนเชิงรุก',
+      description: 'เน้นการวิเคราะห์อย่างเป็นระบบ มีสติในการตัดสินใจฉุกเฉิน และเตรียมแผนสำรองสำหรับสถานการณ์ผ่าตัดที่คาดเดาไม่ได้',
+      subtext: 'จิตแพทย์แนะนำ: โดดเด่นด้านความเป็นผู้นำในห้องผ่าตัด มีความนิ่งและมุ่งเป้าสู่ความสำเร็จอย่างมั่นคง',
+      color: '#06B6D4',
+      glowColor: 'rgba(6, 182, 212, 0.4)'
+    };
+  } else if (vitPercent >= intPercent && vitPercent >= dexPercent) {
+    archetype = {
+      key: 'RESILIENT_GUARDIAN' as const,
+      badge: '🛡️',
+      title: 'The Resilient Guardian',
+      thaiTitle: 'อัศวินแห่งความยืดหยุ่น',
+      description: 'มีเกราะป้องกันใจที่ยืดหยุ่นสูง ปรับมุมมองบวกและยอมรับข้อผิดพลาดเป็นโอกาสเรียนรู้ ฟื้นตัวจากแรงกดดันได้อย่างยอดเยี่ยม',
+      subtext: 'จิตแพทย์แนะนำ: เหมาะสมกับงานที่มีความกดดันสูงและระยะยาว สามารถเป็นหลักยึดเหนี่ยวทางอารมณ์ให้เพื่อนร่วมงาน',
+      color: '#10B981',
+      glowColor: 'rgba(16, 185, 129, 0.4)'
+    };
+  } else {
+    archetype = {
+      key: 'TEAM_CONNECTOR' as const,
+      badge: '🤝',
+      title: 'The Team Connector',
+      thaiTitle: 'ผู้แสวงหาเครือข่าย',
+      description: 'เชี่ยวชาญการสร้างบรรยากาศการทำงานเป็นทีม กล้าปรึกษาอาจารย์และขอคำแนะนำทางเทคนิคเพื่อความปลอดภัยสูงสุดของผู้ป่วย',
+      subtext: 'จิตแพทย์แนะนำ: มีทักษะ Interpersonal สูงมาก ช่วยให้การประสานงานข้ามแผนกและทีมพยาบาลใน OR ราบรื่น',
+      color: '#3B82F6',
+      glowColor: 'rgba(59, 130, 246, 0.4)'
+    };
+  }
+
+  // 3. Active Buffs (Top strengths among adaptive coping dimensions 1-9)
+  const candidateBuffs = [
+    {
+      id: 'active_coping',
+      dimId: 1,
+      name: 'Active Execution',
+      icon: '⚡',
+      score: dimMap.get(1) ?? 0,
+      effectDescription: 'ลงมือแก้ปัญหาเฉพาะหน้าทันที ตัดสินใจเด็ดขาดในภาวะฉุกเฉิน',
+      clinicalBenefit: 'ลดความลังเลในห้องผ่าตัด ควบคุมสถานการณ์วิกฤตได้ดี'
+    },
+    {
+      id: 'planning',
+      dimId: 2,
+      name: 'Strategic Planning Shield',
+      icon: '🧠',
+      score: dimMap.get(2) ?? 0,
+      effectDescription: 'คิดวิเคราะห์ล่วงหน้า เตรียมขั้นตอนและแผนสำรองอย่างเป็นระบบ',
+      clinicalBenefit: 'ลดภาวะแทรกซ้อนที่ป้องกันได้ และบริหารเวลาการผ่าตัดแม่นยำ'
+    },
+    {
+      id: 'instrumental_support',
+      dimId: 3,
+      name: 'Alliance Call Link',
+      icon: '🤝',
+      score: dimMap.get(3) ?? 0,
+      effectDescription: 'แสวงหาคำปรึกษาและความรู้ทางเทคนิคจากอาจารย์ผู้เชี่ยวชาญ',
+      clinicalBenefit: 'ยกระดับ Patient Safety ผ่านการแลกเปลี่ยนความรู้ในทีม'
+    },
+    {
+      id: 'positive_reframing',
+      dimId: 4,
+      name: 'Positive Refraction Aegis',
+      icon: '🔮',
+      score: dimMap.get(4) ?? 0,
+      effectDescription: 'เปลี่ยนอุปสรรคและคำวิจารณ์เป็นพลังขับเคลื่อนการเรียนรู้',
+      clinicalBenefit: 'ป้องกันภาวะท้อแท้ มี Growth Mindset ต่อการฝึกอบรม'
+    },
+    {
+      id: 'acceptance',
+      dimId: 5,
+      name: 'Reality Grounding Core',
+      icon: '⚖️',
+      score: dimMap.get(5) ?? 0,
+      effectDescription: 'ยอมรับผลลัพธ์ที่อยู่นอกเหนือการควบคุมโดยไม่เสียกำลังใจ',
+      clinicalBenefit: 'คงความเยือกเย็นเมื่อเผชิญภาวะแทรกซ้อนที่หลีกเลี่ยงไม่ได้'
+    },
+    {
+      id: 'emotional_support',
+      dimId: 6,
+      name: 'Heart Resonance Beacon',
+      icon: '💖',
+      score: dimMap.get(6) ?? 0,
+      effectDescription: 'มีช่องทางแบ่งปันความรู้สึกและรับกำลังใจจากคนใกล้ชิด',
+      clinicalBenefit: 'ช่วยระบายความเครียดสะสม ลดความรู้สึกโดดเดี่ยวในการเทรนนิ่ง'
+    },
+    {
+      id: 'humor',
+      dimId: 7,
+      name: 'Morale Boost Spark',
+      icon: '🎭',
+      score: dimMap.get(7) ?? 0,
+      effectDescription: 'ใช้อารมณ์ขันเพื่อคลายความตึงเครียดของตนเองและเพื่อนร่วมงาน',
+      clinicalBenefit: 'สร้างบรรยากาศการเรียนรู้ที่ผ่อนคลายและลดฮอร์โมนความเครียด'
+    },
+    {
+      id: 'mindful_distraction',
+      dimId: 9,
+      name: 'Mindful Reset Focus',
+      icon: '☕',
+      score: dimMap.get(9) ?? 0,
+      effectDescription: 'จัดสรรช่วงเวลาพักสมองสั้นๆ เพื่อรีเซ็ตสมาธิและความจำ',
+      clinicalBenefit: 'ป้องกันข้อผิดพลาดจากอาการล้าสายตาและสมองอ่อนเพลีย'
+    }
+  ];
+
+  const activeBuffs = candidateBuffs
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((b) => ({
+      id: b.id,
+      name: b.name,
+      icon: b.icon,
+      level: b.score >= 4 ? 'Lv. MAX' : b.score >= 3 ? 'Lv. 3' : 'Lv. 2',
+      dimensionName: dimensionResults.find((d) => d.id === b.dimId)?.thaiName || b.name,
+      score: b.score,
+      effectDescription: b.effectDescription,
+      clinicalBenefit: b.clinicalBenefit
+    }));
+
+  // 4. Energy Drains (Debuffs / Red flags reframed empathetically)
+  const energyDrains = [];
+
+  const selfBlameScore = dimMap.get(14) ?? 0;
+  if (selfBlameScore >= 2) {
+    energyDrains.push({
+      id: 'drain_self_blame',
+      name: 'Self-Blame Loop',
+      icon: '🌀',
+      dimensionName: 'การกล่าวโทษตนเอง (Self-blame)',
+      score: selfBlameScore,
+      reframedTitle: '🌀 Self-Blame Loop: สมองกำลังคิดวนซ้ำเรื่องความผิดพลาด',
+      reframedAdvice: 'ควรฝึก Self-Compassion แยกแยะระหว่าง "ความรับผิดชอบอย่างมืออาชีพ" กับ "การลงโทษจิตใจตนเอง" และพูดคุยกับที่ปรึกษา',
+      severity: selfBlameScore >= 3 ? ('HIGH' as const) : ('ELEVATED' as const)
+    });
+  }
+
+  const substanceScore = dimMap.get(12) ?? 0;
+  if (substanceScore >= 2) {
+    energyDrains.push({
+      id: 'drain_substance',
+      name: 'Chemical Dependency Risk',
+      icon: '☕',
+      dimensionName: 'การพึ่งพาสาร/เครื่องดื่ม (Substance Use)',
+      score: substanceScore,
+      reframedTitle: '☕ Chemical Dependency Risk: สัญญาณเตือนเรื่อง Circadian Rhythm',
+      reframedAdvice: 'เป็นสัญญาณเตือนเรื่องสุขอนามัยการนอนหลับ ควรปรับเวลาพักผ่อนและจัดวงจรการนอนแทนการพึ่งพากาแฟปริมาณสูงหรือยานอนหลับ',
+      severity: substanceScore >= 3 ? ('HIGH' as const) : ('ELEVATED' as const)
+    });
+  }
+
+  const disengagementScore = dimMap.get(13) ?? 0;
+  if (disengagementScore >= 2) {
+    energyDrains.push({
+      id: 'drain_disengagement',
+      name: 'Battery Low Status',
+      icon: '🛑',
+      dimensionName: 'การถอดใจหรือหลีกหนีปัญหา (Behavioral Disengagement)',
+      score: disengagementScore,
+      reframedTitle: '🛑 Battery Low Status: พลังใจเริ่มเข้าสู่ภาวะล้าสะสม',
+      reframedAdvice: 'สะท้อนว่าภาระงานเกินขีดจำกัดที่สมองจะรับไหว ควรแบ่งปันงานร่วมกับทีม แจ้งอาจารย์ที่ปรึกษา และขอช่วงเวลาพักฟื้น',
+      severity: disengagementScore >= 3 ? ('HIGH' as const) : ('ELEVATED' as const)
+    });
+  }
+
+  const denialScore = dimMap.get(10) ?? 0;
+  if (denialScore >= 2) {
+    energyDrains.push({
+      id: 'drain_denial',
+      name: 'Denial Shield',
+      icon: '🌫️',
+      dimensionName: 'การปฏิเสธความจริง (Denial)',
+      score: denialScore,
+      reframedTitle: '🌫️ Denial Shield: กลไกหลีกเลี่ยงเพื่อปกป้องจิตใจชั่วคราว',
+      reframedAdvice: 'การมองข้ามปัญหาช่วยลดความเจ็บปวดระยะสั้น แต่ควรเปิดใจรับฟังข้อเท็จจริงเพื่อวางแผนร่วมกับทีมอย่างยั่งยืน',
+      severity: denialScore >= 3 ? ('HIGH' as const) : ('MILD' as const)
+    });
+  }
+
+  const ventingScore = dimMap.get(11) ?? 0;
+  if (ventingScore >= 2) {
+    energyDrains.push({
+      id: 'drain_venting',
+      name: 'Pressure Release Valve',
+      icon: '💥',
+      dimensionName: 'การระบายอารมณ์ (Venting)',
+      score: ventingScore,
+      reframedTitle: '💥 Pressure Release Valve: การระบายอารมณ์เพื่อลดแรงกดดันเร่งด่วน',
+      reframedAdvice: 'ช่วยลดความอึดอัดเฉพาะหน้า แต่ควรพัฒนาเป็นการ Debriefing เชิงสร้างสรรค์ที่ช่วยหาทางออกอย่างสร้างสรรค์',
+      severity: ventingScore >= 3 ? ('HIGH' as const) : ('MILD' as const)
+    });
+  }
+
+  // 5. Micro-Habit Quests
+  const microHabits = [
+    {
+      id: 'quest_1',
+      title: '☕ 2-Minute Surgical Debrief',
+      category: 'Self-Reset',
+      timeEstimate: '2 นาที',
+      instruction: 'หลังเสร็จเคสผ่าตัด หายใจเข้า-ออกลึกๆ 4 รอบก่อนเริ่มเขียนชาร์ต เพื่อรีเซ็ตคลื่นสมองจากโหมดผ่าตัด'
+    },
+    {
+      id: 'quest_2',
+      title: '🤝 Peer Check-In Signal',
+      category: 'Team Support',
+      timeEstimate: '3 นาที',
+      instruction: 'ส่งข้อความหรือถามไถ่เพื่อนร่วมรุ่น 1 คนในวันที่เวรหนัก เพื่อยืนยันว่าเราไม่ได้เผชิญความกดดันเพียงลำพัง'
+    },
+    {
+      id: 'quest_3',
+      title: '🧘 Self-Compassion Protocol',
+      category: 'Emotional Care',
+      timeEstimate: '1 นาที',
+      instruction: 'เมื่อเกิดความผิดพลาดในการทำงาน ให้พูดกับตัวเองด้วยคำแนะนำเดียวกับที่เราจะพูดปลอบโยนเพื่อนสนิท'
+    }
+  ];
+
+  // Overall Resilience Index (0-100)
+  const adaptiveWeighted = strPercent * 0.3 + intPercent * 0.2 + vitPercent * 0.3 + dexPercent * 0.2;
+  const drainPenalty = drainPercent * 0.35;
+  const overallResilienceIndex = Math.max(15, Math.min(100, Math.round(adaptiveWeighted - drainPenalty + 15)));
+
+  return {
+    archetype,
+    stats,
+    activeBuffs,
+    energyDrains,
+    microHabits,
+    overallResilienceIndex
+  };
+}
+
 
 export function generateInterviewProbingQuestions(result?: CandidateAssessmentResult): string[] {
   const fallbackQuestions = [
@@ -317,9 +653,13 @@ export function ensureCandidateData(cand: CandidateAssessmentResult): CandidateA
     };
   }
 
+  const rpgProfile =
+    cand.rpgProfile || generateRpgProfile(cand.dimensionResults, cand.redFlagAnalysis);
+
   return {
     ...cand,
     answers: answers,
+    rpgProfile,
     committeeNotes: cand.committeeNotes || '',
     committeeStatus: cand.committeeStatus || 'UNREVIEWED',
     interviewerRating: cand.interviewerRating || 0,

@@ -686,11 +686,26 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
 
                       {/* Middle: Candidate Info & 4-Domain Mini Graphic */}
                       <div className="flex-1 min-w-0">
-                        {/* Top Line: Name & Rating & Time */}
+                        {/* Top Line: Name & Archetype & Rating */}
                         <div className="flex items-center justify-between gap-1.5">
-                          <h3 className="text-xs sm:text-sm font-bold text-[#1F2823] group-hover:text-[#4A6B56] transition-colors truncate">
-                            {candidate.candidateName}
-                          </h3>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <h3 className="text-xs sm:text-sm font-bold text-[#1F2823] group-hover:text-[#4A6B56] transition-colors truncate">
+                              {candidate.candidateName}
+                            </h3>
+                            {candidate.rpgProfile?.archetype && (
+                              <span
+                                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border flex items-center gap-1 shrink-0"
+                                style={{
+                                  backgroundColor: `${candidate.rpgProfile.archetype.color}15`,
+                                  borderColor: `${candidate.rpgProfile.archetype.color}40`,
+                                  color: candidate.rpgProfile.archetype.color
+                                }}
+                              >
+                                <span>{candidate.rpgProfile.archetype.badge}</span>
+                                <span className="hidden sm:inline">{candidate.rpgProfile.archetype.thaiTitle}</span>
+                              </span>
+                            )}
+                          </div>
 
                           {candidate.interviewerRating && candidate.interviewerRating > 0 && (
                             <span className="flex items-center gap-0.5 text-amber-600 text-[11px] font-bold shrink-0">

@@ -40,11 +40,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ResiCope<span className="text-[#D46B47] font-extrabold">.ai</span>
               </span>
               <span className="text-[11px] font-semibold tracking-wide px-2.5 py-0.5 rounded-full bg-[#EBF2ED] text-[#3D5C4A] border border-[#C6D8CC]">
-                Resident Practice Survey
+                ENT Coping & Resilience
               </span>
             </div>
             <p className="text-[11px] text-[#607065] font-light hidden sm:block">
-              ระบบสำรวจสถานการณ์การปฏิบัติงานและเวชปฏิบัติแพทย์ประจำบ้าน
+              การสำรวจสไตล์การรับมือความท้าทายในการเทรนนิ่งแพทย์ประจำบ้าน ENT
             </p>
           </div>
         </div>

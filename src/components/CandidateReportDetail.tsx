@@ -18,12 +18,14 @@ import {
   Activity,
   UserCheck,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { CandidateAssessmentResult } from '../types/assessment';
 import { QUESTION_SETS } from '../data/assessmentData';
 import { generateInterviewProbingQuestions, ensureCandidateData } from '../utils/scoring';
 import { updateCandidateInStorage } from '../data/mockCandidates';
+import { ResultDashboard } from './ResultDashboard';
 
 interface CandidateReportDetailProps {
   candidate: CandidateAssessmentResult;
@@ -41,7 +43,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   onUpdateCandidate
 }) => {
   const candidate = ensureCandidateData(rawCandidate);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'DOMAINS' | 'DIMENSIONS' | 'QUESTIONS' | 'INTERVIEW'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'RPG_STATUS' | 'DOMAINS' | 'DIMENSIONS' | 'QUESTIONS' | 'INTERVIEW'>('OVERVIEW');
   const [committeeNotes, setCommitteeNotes] = useState(candidate.committeeNotes || '');
   const [status, setStatus] = useState(candidate.committeeStatus || 'UNREVIEWED');
   const [rating, setRating] = useState<number>(candidate.interviewerRating || 0);
@@ -240,6 +242,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
         <div className="flex items-center gap-1.5 shrink-0">
           {[
             { id: 'OVERVIEW', label: 'ภาพรวม (Overview)', icon: Layers },
+            { id: 'RPG_STATUS', label: '🎮 RPG Infographic', icon: Sparkles },
             { id: 'DOMAINS', label: '4 โดเมนหลัก', icon: Activity },
             { id: 'DIMENSIONS', label: '14 มิติการรับมือ', icon: Brain },
             { id: 'QUESTIONS', label: 'ตรวจคำตอบ (Audit)', icon: FileText },
@@ -281,6 +284,13 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
           </span>
         </div>
       </div>
+
+      {/* TAB: RPG INFOGRAPHIC */}
+      {activeTab === 'RPG_STATUS' && (
+        <div className="rounded-3xl overflow-hidden shadow-2xl mb-6">
+          <ResultDashboard candidate={candidate} isCommitteeView={true} />
+        </div>
+      )}
 
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'OVERVIEW' && (

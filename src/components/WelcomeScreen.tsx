@@ -30,16 +30,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EBF2ED] border border-[#C6D8CC] text-[#375241] text-xs font-bold mb-4 shadow-sm">
           <Stethoscope className="w-4 h-4 text-[#4A6B56]" />
-          <span>Resident Clinical Survey</span>
+          <span>Digital Psychiatry & Resilience Engine</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1F2823] mb-3">
-          แบบสำรวจการปฏิบัติงาน
+          ENT Surgical Coping
           <span className="block mt-1 bg-gradient-to-r from-[#4A6B56] to-[#D46B47] bg-clip-text text-transparent">
-            แพทย์ประจำบ้าน
+            & Resilience Profile
           </span>
         </h1>
         <p className="text-[#58665E] text-sm sm:text-base font-normal max-w-lg mx-auto">
-          สำรวจแนวทางการตัดสินใจและการบริหารงานในเวชปฏิบัติจริง
+          การสำรวจสไตล์การรับมือความท้าทายในการเทรนนิ่งแพทย์ประจำบ้านโสต ศอ นาสิกวิทยา (ไม่มีข้อถูกหรือผิด)
         </p>
 
         {/* Quick Visual Badges */}
@@ -48,10 +48,10 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             <Clock className="w-3.5 h-3.5" /> 5–8 นาที
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#D6E2DA] text-xs font-semibold text-[#4A6B56] shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" /> 7 ชุดคำถาม
+            <Sparkles className="w-3.5 h-3.5" /> 7 สถานการณ์จำลอง
           </span>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#D6E2DA] text-xs font-semibold text-[#4A6B56] shadow-sm">
-            <Smartphone className="w-3.5 h-3.5" /> แตะเลือกบนมือถือ
+            <Smartphone className="w-3.5 h-3.5" /> RPG Infographic Status
           </span>
         </div>
       </div>
@@ -72,15 +72,15 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                 <UserCheck className="w-6 h-6" />
               </div>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#EBF2ED] text-[#375241]">
-                ผู้สมัคร
+                ผู้สมัครแพทย์ประจำบ้าน
               </span>
             </div>
 
             <h2 className="text-xl font-bold text-[#1F2823] group-hover:text-[#4A6B56] transition-colors mb-2">
-              สำหรับผู้สมัคร
+              สำรวจสไตล์การรับมือความเครียด
             </h2>
             <p className="text-xs text-[#58665E] mb-5">
-              เลือก 2 ตัวเลือกในแต่ละข้อตามความเป็นจริง (ไม่มีข้อถูกหรือผิด)
+              ค้นพบ Coping Archetype, Active Buffs และแผนผังเรดาร์สไตล์ RPG ของตัวท่าน
             </p>
 
             {/* Visual Touch Rule Anchors */}
@@ -97,9 +97,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           </div>
 
           <div className="pt-4 border-t border-[#EDF3EF] flex items-center justify-between">
-            <span className="text-xs font-bold text-[#4A6B56]">เริ่มทำแบบสำรวจ</span>
-            <div className="spring-bounce flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#D46B47] text-white text-xs font-bold shadow-md shadow-[#D46B47]/20 group-hover:bg-[#BF5A37]">
-              <span>เริ่มต้น</span>
+            <span className="text-xs font-bold text-[#4A6B56]">Psychological Safety • ไม่มีข้อถูกผิด</span>
+            <div className="spring-bounce flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#D46B47] text-white text-xs font-bold shadow-md shadow-[#D46B47]/20 group-hover:bg-[#BF5A37]">
+              <span>เริ่มสำรวจสไตล์การรับมือความเครียด</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </div>

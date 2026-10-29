@@ -81,6 +81,69 @@ export interface RedFlagAnalysis {
   recommendations: string[];
 }
 
+export type ArchetypeKey = 'TACTICAL_MASTER' | 'RESILIENT_GUARDIAN' | 'TEAM_CONNECTOR' | 'OVERLOADED_CRUSADER';
+
+export interface CopingArchetype {
+  key: ArchetypeKey;
+  badge: string;
+  title: string;
+  thaiTitle: string;
+  description: string;
+  subtext: string;
+  color: string;
+  glowColor: string;
+}
+
+export interface RpgStat {
+  key: 'STR' | 'INT' | 'VIT' | 'DEX' | 'DRAIN';
+  name: string;
+  thaiName: string;
+  score: number;
+  maxScore: number;
+  percentage: number;
+  description: string;
+  color: string;
+}
+
+export interface ActiveBuff {
+  id: string;
+  name: string;
+  icon: string;
+  level: string;
+  dimensionName: string;
+  score: number;
+  effectDescription: string;
+  clinicalBenefit: string;
+}
+
+export interface EnergyDrain {
+  id: string;
+  name: string;
+  icon: string;
+  dimensionName: string;
+  score: number;
+  reframedTitle: string;
+  reframedAdvice: string;
+  severity: 'MILD' | 'ELEVATED' | 'HIGH';
+}
+
+export interface MicroHabitQuest {
+  id: string;
+  title: string;
+  category: string;
+  timeEstimate: string;
+  instruction: string;
+}
+
+export interface RpgProfile {
+  archetype: CopingArchetype;
+  stats: Record<'STR' | 'INT' | 'VIT' | 'DEX' | 'DRAIN', RpgStat>;
+  activeBuffs: ActiveBuff[];
+  energyDrains: EnergyDrain[];
+  microHabits: MicroHabitQuest[];
+  overallResilienceIndex: number; // 0 to 100
+}
+
 export interface CandidateAssessmentResult {
   id: string;
   candidateName: string;
@@ -94,6 +157,7 @@ export interface CandidateAssessmentResult {
   redFlagAnalysis: RedFlagAnalysis;
   totalScore: number; // Always 28
   primaryDominantDomain: string;
+  rpgProfile?: RpgProfile;
   committeeNotes?: string;
   committeeStatus?: 'UNREVIEWED' | 'SHORTLISTED' | 'NEEDS_INTERVIEW_PROBE' | 'APPROVED' | 'CONCERN';
   interviewerRating?: number; // 1 to 5
