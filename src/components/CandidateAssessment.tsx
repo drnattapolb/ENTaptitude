@@ -18,7 +18,7 @@ import { QUESTION_SETS } from '../data/assessmentData';
 import { CandidateAssessmentResult, OptionKey } from '../types/assessment';
 import { calculateCandidateResult } from '../utils/scoring';
 import { saveCandidateResult } from '../data/mockCandidates';
-import { ResultDashboard } from './ResultDashboard';
+import { CandidateCompletionScreen } from './CandidateCompletionScreen';
 
 interface CandidateAssessmentProps {
   onComplete: () => void;
@@ -644,13 +644,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   }
 
   // -------------------------------------------------------------
-  // STEP 5: SUCCESS & RPG INFOGRAPHIC RESULT DASHBOARD
+  // STEP 5: SUCCESS - ROUTE CANDIDATE TO COMPLETION SCREEN
   // -------------------------------------------------------------
-  if (step === 'SUCCESS' && finalResult) {
+  if (step === 'SUCCESS') {
     return (
-      <ResultDashboard
-        candidate={finalResult}
-        onExit={onExit}
+      <CandidateCompletionScreen
+        onReturnHome={onExit}
       />
     );
   }

@@ -65,21 +65,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {currentView !== 'welcome' ? (
+          {currentView !== 'welcome' && (
             <button
               onClick={onNavigateHome}
               className="spring-bounce flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-semibold text-[#3D5C4A] hover:text-[#1F2823] bg-white hover:bg-[#F2F7F4] border border-[#D6E2DA] shadow-sm transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>หน้าแรก</span>
-            </button>
-          ) : (
-            <button
-              onClick={onOpenCommittee}
-              className="spring-bounce flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-semibold text-white bg-[#4A6B56] hover:bg-[#3D5C4A] shadow-md shadow-[#4A6B56]/20 transition-all"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>เข้าสู่ระบบกรรมการ 🔒</span>
             </button>
           )}
 

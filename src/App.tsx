@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { LandingPage } from './components/LandingPage';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { CandidateAssessment } from './components/CandidateAssessment';
 import { CommitteeDashboard } from './components/CommitteeDashboard';
@@ -44,7 +45,8 @@ export default function App() {
 
   const handleCandidateFinished = () => {
     setCandidates(getStoredCandidates());
-    setCurrentView('committee');
+    setCurrentView('welcome');
+    setCandidateNameHeader('');
   };
 
   const handleExitToHome = () => {
@@ -75,21 +77,23 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Header */}
-      <Navbar
-        currentView={currentView}
-        candidateName={candidateNameHeader}
-        onNavigateHome={handleExitToHome}
-        onOpenCommittee={handleSelectCommittee}
-        onResetData={handleResetData}
-      />
+      {/* Navigation Header (Shown during Candidate & Committee sessions) */}
+      {currentView !== 'welcome' && (
+        <Navbar
+          currentView={currentView}
+          candidateName={candidateNameHeader}
+          onNavigateHome={handleExitToHome}
+          onOpenCommittee={handleSelectCommittee}
+          onResetData={handleResetData}
+        />
+      )}
 
       {/* Main Content Router */}
       <main className="flex-1 flex flex-col">
         {currentView === 'welcome' && (
-          <WelcomeScreen
-            onSelectCandidate={handleSelectCandidate}
-            onSelectCommittee={handleSelectCommittee}
+          <LandingPage
+            onStartAssessment={handleSelectCandidate}
+            onAdminLoginSuccess={handleAuthSuccess}
           />
         )}
 
@@ -118,13 +122,15 @@ export default function App() {
         onSuccess={handleAuthSuccess}
       />
 
-      {/* Global Minimal Warm Footer */}
-      <footer className="border-t border-[#E2ECE5] py-5 px-6 text-center text-xs text-[#68776F] font-normal no-print bg-[#FAF7F2]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>ResiCope — ระบบสำรวจสถานการณ์และการปฏิบัติงานของแพทย์ประจำบ้าน</span>
-          <span className="text-[#84948B] font-mono text-[11px]">สงวนลิขสิทธิ์เฉพาะคณะกรรมการคัดเลือกแพทย์ประจำบ้าน</span>
-        </div>
-      </footer>
+      {/* Global Minimal Warm Footer (Shown when outside welcome screen) */}
+      {currentView !== 'welcome' && (
+        <footer className="border-t border-[#E2ECE5] py-5 px-6 text-center text-xs text-[#68776F] font-normal no-print bg-[#FAF7F2]">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>ResiCope — ระบบสำรวจสถานการณ์และการปฏิบัติงานของแพทย์ประจำบ้าน</span>
+            <span className="text-[#84948B] font-mono text-[11px]">สงวนลิขสิทธิ์เฉพาะคณะกรรมการคัดเลือกแพทย์ประจำบ้าน</span>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
