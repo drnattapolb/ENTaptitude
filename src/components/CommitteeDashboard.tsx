@@ -130,12 +130,14 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
       'Name',
       'Specialty',
       'Submitted At',
-      'Red Flag Score (out of 20)',
-      'Risk Tier',
+      'Support Needs Index (out of 20)',
+      'Mentorship Support Tier',
       'Domain 1 % (Task-Focused)',
       'Domain 2 % (Adaptive Emotion)',
       'Domain 3 % (Distraction)',
-      'Domain 4 % (Maladaptive & Red Flags)',
+      'Domain 4 % (Personal Support Needs)',
+      'Candidate Context Note',
+      'Institutional Care Plan',
       'Committee Status',
       'Rating',
       'Notes'
@@ -152,6 +154,8 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
       c.domainResults[1]?.percentage || 0,
       c.domainResults[2]?.percentage || 0,
       c.domainResults[3]?.percentage || 0,
+      `"${(c.candidateContextNote || '').replace(/"/g, '""')}"`,
+      `"${(c.institutionalCarePlan || []).join('; ').replace(/"/g, '""')}"`,
       c.committeeStatus || '',
       c.interviewerRating || 0,
       `"${(c.committeeNotes || '').replace(/"/g, '""')}"`
@@ -265,9 +269,9 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
 
         {/* Desktop Quick Summary Indicator */}
         <div className="hidden lg:flex items-center gap-3 text-xs pr-2 font-mono">
-          <span className="text-[#2D5C39] font-bold">🟢 ปลอดภัย {lowRiskCount}</span>
-          <span className="text-[#8A6715] font-bold">🟡 เฝ้าระวัง {modRiskCount}</span>
-          <span className="text-[#B92A2A] font-bold">🔴 เสี่ยงสูง {highRiskCount}</span>
+          <span className="text-[#2D5C39] font-bold">🟢 พึ่งพาตนเอง {lowRiskCount}</span>
+          <span className="text-[#8A6715] font-bold">🟡 สนับสนุนมาตรฐาน {modRiskCount}</span>
+          <span className="text-[#B92A2A] font-bold">🤝 แนะนำ Mentor ใกล้ชิด {highRiskCount}</span>
         </div>
       </div>
 
@@ -276,20 +280,20 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
         <div className={`space-y-4 mb-5 ${activeTab !== 'GRAPHICS' ? 'hidden xl:block' : 'block'}`}>
           {/* Top Visual Row: Donut Chart + 4 Coping Domains Visual Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Visual Graphic 1: Red Flag Risk Stratification Donut Gauge */}
+            {/* Visual Graphic 1: Support Needs Index Stratification Donut Gauge */}
             <div className="lg:col-span-5 rounded-2xl p-4 sm:p-5 bg-white border border-[#D6E2DA] shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm sm:text-base font-bold text-[#1F2823] flex items-center gap-2">
                     <PieChart className="w-4 h-4 text-[#4A6B56]" />
-                    <span>การกระจายตัวความเสี่ยง (Risk Donut)</span>
+                    <span>การกระจายตัวความต้องการการสนับสนุน (Mentorship Donut)</span>
                   </h3>
                   <span className="text-[11px] font-mono text-[#718278] bg-[#F2F7F4] px-2 py-0.5 rounded-lg border border-[#D6E2DA]">
                     N = {totalCount}
                   </span>
                 </div>
                 <p className="text-xs text-[#58665E] leading-relaxed">
-                  สัดส่วนผู้สมัครแยกตามระดับความเสี่ยง Red Flag Score (เต็ม 20)
+                  สัดส่วนผู้สมัครแยกตามระดับความต้องการการสนับสนุน Mentorship Support Index (เต็ม 20)
                 </p>
               </div>
 
@@ -361,7 +365,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
 
                   {/* Donut Center Display */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-xs text-[#718278] font-medium">เฉลี่ย Red Flag</span>
+                    <span className="text-xs text-[#718278] font-medium">Support Needs เฉลี่ย</span>
                     <span className="text-2xl font-extrabold font-mono text-[#1F2823] tracking-tight">
                       {avgRedFlag}
                     </span>
@@ -382,7 +386,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 >
                   <div className="text-[11px] font-bold text-[#166534] flex items-center justify-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                    <span>ต่ำ (0-6)</span>
+                    <span>พึ่งพาตนเอง</span>
                   </div>
                   <div className="text-base font-bold font-mono text-[#166534] mt-0.5">
                     {lowRiskCount} <span className="text-[10px] font-normal">({lowPercent}%)</span>
@@ -399,7 +403,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 >
                   <div className="text-[11px] font-bold text-[#92400E] flex items-center justify-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-                    <span>กลาง (7-12)</span>
+                    <span>สนับสนุนมาตรฐาน</span>
                   </div>
                   <div className="text-base font-bold font-mono text-[#92400E] mt-0.5">
                     {modRiskCount} <span className="text-[10px] font-normal">({modPercent}%)</span>
@@ -416,7 +420,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 >
                   <div className="text-[11px] font-bold text-[#991B1B] flex items-center justify-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
-                    <span>สูง (13-20)</span>
+                    <span>Mentor ใกล้ชิด 🤝</span>
                   </div>
                   <div className="text-base font-bold font-mono text-[#991B1B] mt-0.5">
                     {highRiskCount} <span className="text-[10px] font-normal">({highPercent}%)</span>
@@ -507,12 +511,12 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Domain 4: Maladaptive */}
+                {/* Domain 4: Personal Support Needs */}
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <div className="font-bold text-rose-950 flex items-center gap-1.5">
                       <span className="w-2.5 h-2.5 rounded-md bg-rose-500" />
-                      <span>Domain 4: Maladaptive 🚩 (กลไกเชิงลบ/เสี่ยงสูง)</span>
+                      <span>Domain 4: Personal Support Needs (พื้นที่เพื่อการดูแลสนับสนุน)</span>
                     </div>
                     <span className="font-mono font-bold text-rose-900 text-sm">{avgD4}%</span>
                   </div>
@@ -523,8 +527,8 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                     />
                   </div>
                   <div className="flex justify-between text-[10px] text-rose-700 font-medium mt-0.5">
-                    <span>การโทษตนเอง, สารเสพติด, ละทิ้งความพยายาม</span>
-                    <span className="font-bold">ระดับปลอดภัย: &lt; 15%</span>
+                    <span>การดูแลสุขอนามัยการนอนหลับ, การระบายความเครียด, และการขอคำปรึกษา</span>
+                    <span className="font-bold">เกณฑ์แนะนำ: &lt; 20%</span>
                   </div>
                 </div>
               </div>
@@ -533,7 +537,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
               <div className="p-2.5 rounded-xl bg-[#FAF7F2] border border-[#E2ECE5] flex items-center gap-2 text-[11px] text-[#58665E]">
                 <Info className="w-4 h-4 text-[#4A6B56] shrink-0" />
                 <span>
-                  หากผู้สมัครมี <strong>Domain 4 สูงเกิน 25%</strong> หรือ <strong>Red Flag &ge; 13</strong> คณะกรรมการควรใช้ชุดคำถามสัมภาษณ์เจาะลึกเพิ่มเติม
+                  <strong>หลักการคัดเลือกแพทย์ประจำบ้าน:</strong> ภาควิชาให้คุณค่ากับความตระหนักรู้ในตนเอง (Self-Awareness) มากกว่าความสมบูรณ์แบบ ใช้ข้อมูลนี้เปิดบทสนทนาการให้คำปรึกษา (Mentorship)
                 </span>
               </div>
             </div>
@@ -607,7 +611,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                <span>ปลอดภัย ({lowRiskCount})</span>
+                <span>พึ่งพาตนเองสูง ({lowRiskCount})</span>
               </button>
 
               <button
@@ -620,7 +624,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-                <span>เฝ้าระวัง ({modRiskCount})</span>
+                <span>สนับสนุนมาตรฐาน ({modRiskCount})</span>
               </button>
 
               <button
@@ -633,7 +637,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-[#EF4444]" />
-                <span>เสี่ยงสูง 🚩 ({highRiskCount})</span>
+                <span>แนะนำ Mentor ใกล้ชิด 🤝 ({highRiskCount})</span>
               </button>
             </div>
           </div>

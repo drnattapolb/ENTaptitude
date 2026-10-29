@@ -158,7 +158,10 @@ export interface CandidateAssessmentResult {
   totalScore: number; // Always 28
   primaryDominantDomain: string;
   rpgProfile?: RpgProfile;
+  candidateContextNote?: string; // Optional context note written by candidate for interviewers
+  institutionalCarePlan?: string[]; // Action items selected by committee for resident care commitment
   committeeNotes?: string;
   committeeStatus?: 'UNREVIEWED' | 'SHORTLISTED' | 'NEEDS_INTERVIEW_PROBE' | 'APPROVED' | 'CONCERN';
   interviewerRating?: number; // 1 to 5
 }
+

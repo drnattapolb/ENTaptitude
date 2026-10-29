@@ -114,6 +114,27 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({
           </div>
         </div>
 
+        {/* Candidate's Context Note (Mentorship Conversation Starter) */}
+        {candidate.candidateContextNote && (
+          <div className="rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900/90 border border-emerald-500/30 p-4 sm:p-5 shadow-lg flex items-start gap-3">
+            <span className="text-xl shrink-0 mt-0.5">📝</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-emerald-400 flex items-center flex-wrap gap-2 mb-1">
+                <span>บันทึกบริบทส่วนตัวที่คุณส่งถึงอาจารย์ (Candidate's Context Note)</span>
+                <span className="text-[10px] text-emerald-300/80 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 font-mono">
+                  Mentorship Starter
+                </span>
+              </div>
+              <p className="text-xs sm:text-[13px] text-slate-200 leading-relaxed italic bg-black/20 p-3 rounded-xl border border-emerald-900/30 font-medium">
+                "{candidate.candidateContextNote}"
+              </p>
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                💡 ข้อมูลนี้จะช่วยให้อาจารย์ผู้สัมภาษณ์เข้าใจสไตล์การทำงานและบริบทเฉพาะตัวของคุณได้อย่างสร้างสรรค์
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 2-COLUMN MAIN INFOGRAPHIC: Radar Chart (Left) + 5 Stats Breakdown (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left: Ragnarok Polygon Radar Chart Card */}
@@ -318,9 +339,9 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({
             {energyDrains.length === 0 ? (
               <div className="p-8 text-center rounded-2xl bg-slate-950/40 border border-slate-800">
                 <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
-                <h4 className="text-sm font-bold text-white">ยอดเยี่ยม! ไม่พบภาวะเสี่ยง Red Flag</h4>
+                <h4 className="text-sm font-bold text-white">ยอดเยี่ยม! พึ่งพาตนเองได้ดีและมีความสมดุลสูง</h4>
                 <p className="text-xs text-slate-400 mt-1">
-                  กลไกการรับมือกับความเครียดอยู่ในเกณฑ์สมดุลและปลอดภัยสูง
+                  กลไกการรับมือกับความเครียดอยู่ในเกณฑ์สมดุลและมีความพร้อมต่อการเทรนนิ่ง
                 </p>
               </div>
             ) : (
@@ -340,7 +361,7 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({
                           ? 'bg-rose-500/30 text-rose-300 border border-rose-500/50'
                           : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                       }`}>
-                        {drain.severity === 'HIGH' ? 'High Drain 🚩' : 'Elevated Drain'}
+                        {drain.severity === 'HIGH' ? 'Support Needed 🤝' : 'Self-Care Focus'}
                       </span>
                     </div>
 

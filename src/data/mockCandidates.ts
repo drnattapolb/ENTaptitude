@@ -38,39 +38,54 @@ export const INITIAL_MOCK_CANDIDATES: CandidateAssessmentResult[] = [
   {
     ...calculateCandidateResult('นพ. กฤษดา ธนวัฒน์เจริญ', cand1Answers, {
       specialty: 'โสต ศอ นาสิกวิทยา (ENT)',
-      hospitalOrSchool: 'ศิริราชพยาบาล / แพทย์เพิ่มพูนทักษะ รพ.ศูนย์ชลบุรี'
+      hospitalOrSchool: 'ศิริราชพยาบาล / แพทย์เพิ่มพูนทักษะ รพ.ศูนย์ชลบุรี',
+      candidateContextNote: 'ในช่วงเพิ่มพูนทักษะที่ รพ.ศูนย์ ได้มีโอกาสช่วยเคสฉุกเฉินทางเดินหายใจหลายครั้ง ทำให้ฝึกการวางแผนและประสานงานกับทีมอย่างรวดเร็ว หากมีข้อผิดพลาดจะชอบเปิดอกคุยกับอาจารย์ทันทีเพื่อไม่ให้ค้างคาใจ'
     }),
     id: 'CAND-2026-081',
     submittedAt: '2026-10-21T09:15:00.000Z',
     committeeStatus: 'SHORTLISTED',
     interviewerRating: 5,
-    committeeNotes: 'มีทักษะ Task-Focused โดดเด่นมาก กลไกเผชิญความกดดันใน OR ว่องไว เหมาะกับงานผ่าตัดฉุกเฉิน'
+    committeeNotes: 'มีทักษะ Task-Focused โดดเด่นมาก กลไกเผชิญความกดดันใน OR ว่องไว มี Self-Awareness สูง',
+    institutionalCarePlan: [
+      'จัดเข้าโครงการ Faculty Mentorship ด้าน Work-Life Integration'
+    ]
   },
   {
     ...calculateCandidateResult('พญ. วริศรา เมธาคุณากร', cand2Answers, {
       specialty: 'โสต ศอ นาสิกวิทยา (ENT)',
-      hospitalOrSchool: 'จุฬาลงกรณ์มหาวิทยาลัย / แพทย์เพิ่มพูนทักษะ รพ.ราชวิถี'
+      hospitalOrSchool: 'จุฬาลงกรณ์มหาวิทยาลัย / แพทย์เพิ่มพูนทักษะ รพ.ราชวิถี',
+      candidateContextNote: 'เมื่อเจอสถานการณ์ตึงเครียด มักจะหาเวลาพูดคุยปรึกษากับเพื่อนร่วมงานหรืออาจารย์ที่ไว้ใจ เพื่อทบทวนความรู้สึกและจัดระเบียบความคิดก่อนลุยงานต่อ'
     }),
     id: 'CAND-2026-082',
     submittedAt: '2026-10-21T11:42:00.000Z',
     committeeStatus: 'NEEDS_INTERVIEW_PROBE',
     interviewerRating: 4,
-    committeeNotes: 'มี Support-seeking ดี แต่มีคะแนน Venting ค่อนข้างเด่น ควรซักถามเรื่องการจัดการอารมณ์เมื่อโดนอาจารย์กดดันในวอร์ด'
+    committeeNotes: 'มี Support-seeking ดี สะท้อนความต้องการการสนับสนุนอย่างจริงใจ ควรชวนคุยแนวทางการระบายความเครียดในวอร์ด',
+    institutionalCarePlan: [
+      'แต่งตั้ง Senior Resident Buddy ช่วยประคองช่วง 3 เดือนแรก',
+      'จัดเข้าโครงการ Faculty Mentorship ด้าน Work-Life Integration'
+    ]
   },
   {
     ...calculateCandidateResult('นพ. ธนกฤต วิเศษไชยศรี', cand3Answers, {
       specialty: 'โสต ศอ นาสิกวิทยา (ENT)',
-      hospitalOrSchool: 'รพ.รามาธิบดี / รพ.ทั่วไปสุราษฎร์ธานี'
+      hospitalOrSchool: 'รพ.รามาธิบดี / รพ.ทั่วไปสุราษฎร์ธานี',
+      candidateContextNote: 'ช่วงที่ผ่านมาควงเวรติดต่อกันหลายวัน ทำให้พักผ่อนน้อยและรู้สึกกดดันกับตนเองมาก บางครั้งจึงใช้เวลากับตนเองหรือกาแฟเข้มข้นเพื่อประคองวัน แต่พร้อมอย่างยิ่งที่จะเรียนรู้และปรับตัวภายใต้การดูแลของอาจารย์'
     }),
     id: 'CAND-2026-083',
     submittedAt: '2026-10-21T14:30:00.000Z',
-    committeeStatus: 'CONCERN',
-    interviewerRating: 2,
-    committeeNotes: 'Red Flag สูง (คะแนน 15/20) มีคะแนน Self-blame และ Substance Use เด่นชัด ต้องสัมภาษณ์เจาะลึกสุขอนามัยการนอนและภาวะ Burnout'
+    committeeStatus: 'NEEDS_INTERVIEW_PROBE',
+    interviewerRating: 3,
+    committeeNotes: 'Support Needs Index อยู่ในระดับที่แนะนำระบบ Mentor ดูแลใกล้ชิด (คะแนน 15/20) ชื่นชมในความกล้าเปิดเผยข้อจำกัดเรื่องการนอนหลับ แนะนำจับคู่ Mentor และสนับสนุนเรื่อง Sleep Hygiene',
+    institutionalCarePlan: [
+      'แต่งตั้ง Senior Resident Buddy ช่วยประคองช่วง 3 เดือนแรก',
+      'ติดตามระบบ Sleep Hygiene & Rotation Schedule เป็นพิเศษ',
+      'จัดเซสชั่น Debrief เชิงสร้างสรรค์หลังเคสผ่าตัดฉุกเฉินหรือภาวะแทรกซ้อน'
+    ]
   }
 ];
 
-const LOCAL_STORAGE_KEY = 'resicope_candidates_v1';
+const LOCAL_STORAGE_KEY = 'resicope_candidates_v3';
 
 export function getStoredCandidates(): CandidateAssessmentResult[] {
   try {

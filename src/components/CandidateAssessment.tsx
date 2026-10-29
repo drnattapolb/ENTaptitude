@@ -58,6 +58,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   const [candidateName, setCandidateName] = useState('');
   const [specialty, setSpecialty] = useState('โสต ศอ นาสิกวิทยา (ENT)');
   const [hospitalOrSchool, setHospitalOrSchool] = useState('');
+  const [candidateContextNote, setCandidateContextNote] = useState('');
   const [nameError, setNameError] = useState('');
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -284,7 +285,8 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
 
     const result = calculateCandidateResult(candidateName.trim(), finalizedAnswers, {
       specialty,
-      hospitalOrSchool: hospitalOrSchool.trim() || 'ผู้สมัครแพทย์ประจำบ้าน'
+      hospitalOrSchool: hospitalOrSchool.trim() || 'ผู้สมัครแพทย์ประจำบ้าน',
+      candidateContextNote: candidateContextNote.trim() || undefined
     });
 
     saveCandidateResult(result);
@@ -498,6 +500,17 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
             </div>
           </div>
 
+          {/* Program Director's Reassurance Note */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/80 text-white mb-4 shadow-sm text-left">
+            <div className="flex items-start gap-2.5">
+              <span className="text-base shrink-0 mt-0.5">💬</span>
+              <div className="text-[11px] leading-relaxed">
+                <span className="font-bold text-indigo-300 block mb-0.5">ข้อความจากประธานหลักสูตร:</span>
+                <span className="text-slate-300 italic">"ภาควิชาไม่ได้มองหาคนที่ไร้ความเครียด แต่เรามองหาคนที่ตระหนักรู้ในตนเอง ตอบตามความเป็นจริงเพื่อให้เราเข้าใจและพร้อมดูแลคุณ"</span>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Notice Badge */}
           <div className="p-3 rounded-xl bg-[#F8ECE8] border border-[#E9C5B9] text-xs text-[#A64525] flex items-center gap-2 mb-6 font-medium">
             <AlertCircle className="w-4 h-4 shrink-0 text-[#D46B47]" />
@@ -572,6 +585,31 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
                 );
               })}
             </div>
+          </div>
+
+          {/* Candidate's Context Note (Mentorship Conversation Starter) */}
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#FAF7F2] via-emerald-50/40 to-teal-50/50 border border-emerald-200/80 shadow-xs text-left">
+            <div className="flex items-start gap-2.5 mb-2">
+              <span className="text-base shrink-0">📝</span>
+              <div>
+                <h3 className="text-xs font-bold text-[#2D5C39] flex items-center flex-wrap gap-1.5">
+                  <span>บันทึกบริบทเพิ่มเติมถึงอาจารย์ผู้สัมภาษณ์ (Context Note)</span>
+                  <span className="text-[10px] font-normal text-[#58665E] bg-white px-2 py-0.5 rounded-full border border-emerald-200">
+                    ไม่บังคับ (Optional)
+                  </span>
+                </h3>
+                <p className="text-[11px] text-[#58665E] leading-relaxed mt-1">
+                  มีบริบทการทำงาน ข้อจำกัด หรือเหตุการณ์เฉพาะที่อยากแชร์ให้อาจารย์ผู้สัมภาษณ์เข้าใจสไตล์การรับมือของคุณเพิ่มเติมหรือไม่? ภาควิชาใช้ข้อความนี้เพื่อเปิดบทสนทนาการให้คำปรึกษา (Mentorship) อย่างสร้างสรรค์
+                </p>
+              </div>
+            </div>
+            <textarea
+              rows={3}
+              value={candidateContextNote}
+              onChange={(e) => setCandidateContextNote(e.target.value)}
+              placeholder="เช่น 'ในช่วงที่อยู่เวรหนักติดต่อกัน อาจมีความกังวลเรื่องการนอนหลับบ้าง หรือในเคสที่ท้าทาย มักชอบทบทวนร่วมกับอาจารย์หรือพี่เดนท์เพื่อหาแนวทางปรับปรุง...'"
+              className="w-full p-3 rounded-xl bg-white border border-[#D6E2DA] text-xs text-[#1F2823] placeholder:text-[#9AA8A0] focus:outline-none focus:border-[#4A6B56] focus:ring-2 focus:ring-[#4A6B56]/15 transition-all resize-none mt-1"
+            />
           </div>
 
           {validationWarning && (

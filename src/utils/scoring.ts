@@ -11,7 +11,7 @@ import { DIMENSIONS, QUESTION_SETS } from '../data/assessmentData';
 export function calculateCandidateResult(
   candidateName: string,
   answers: Record<number, { most: OptionKey; least: OptionKey }>,
-  metadata?: { specialty?: string; hospitalOrSchool?: string }
+  metadata?: { specialty?: string; hospitalOrSchool?: string; candidateContextNote?: string }
 ): CandidateAssessmentResult {
   const optionPointBreakdown: Record<string, number> = {};
 
@@ -144,52 +144,52 @@ export function calculateCandidateResult(
     },
     {
       id: 4,
-      name: 'Maladaptive & Red Flags 🚩',
-      thaiName: 'กลไกเชิงลบและความเสี่ยงทางจิตวิทยา',
-      description: 'การปฏิเสธปัญหา ระบายอารมณ์ซ้ำซาก สาร/แอลกอฮอล์ ถอดใจทิ้งงาน และการโทษตนเอง',
+      name: 'Personal Support Needs (พื้นที่เพื่อการดูแลสนับสนุน)',
+      thaiName: 'พื้นที่ที่ต้องการการดูแลและสนับสนุน (Personal Support Needs)',
+      description: 'สัญญาณเตือนความเหนื่อยล้าสะสม สุขอนามัยการนอนหลับ และจุดที่ต้องการการประคับประคองจากอาจารย์ที่ปรึกษา',
       subDimensions: ['Denial', 'Venting', 'Substance Use', 'Behavioral Disengagement', 'Self-blame'],
       itemCount: 10,
       score: d4Score,
       percentage: Number(((d4Score / 28) * 100).toFixed(1)),
-      color: '#EF4444',
-      glowColor: 'rgba(239, 68, 68, 0.4)'
+      color: '#F43F5E',
+      glowColor: 'rgba(244, 63, 94, 0.4)'
     }
   ];
 
-  // 4. Red Flag Risk Score calculation (Items 10-14, max 20)
+  // 4. Support Needs Score calculation (Items 10-14, max 20)
   const redFlagScore = d4Score;
   let tier: RiskTier = 'LOW';
-  let tierLabel = 'Low Risk';
-  let thaiLabel = 'ความเสี่ยงต่ำ (Low Risk)';
-  let clinicalInterpretation = 'ทนทานต่อความกดดันและมีกลไกรับมือทางอารมณ์ที่ดี มีแนวโน้มปรับตัวกับการฝึกอบรมแพทย์ประจำบ้านได้ราบรื่น';
+  let tierLabel = 'Self-Sustaining Resilience';
+  let thaiLabel = 'มีความพร้อมในการพึ่งพาตนเองสูง (Self-Sustaining)';
+  let clinicalInterpretation = 'มีกลไกรับมือทางอารมณ์ที่สมดุล ปรับตัวต่อภาระงานฝึกอบรมได้ราบรื่น แนะนำสนับสนุนให้เป็น Buddy คอยสนับสนุนเพื่อนร่วมรุ่น';
   let riskColor = '#10B981'; // Green
   let recommendations: string[] = [
-    'มีความพร้อมด้านวุฒิภาวะทางอารมณ์สูง',
+    'มีความตระหนักรู้และวุฒิภาวะทางอารมณ์สูง',
     'แนะนำสนับสนุนให้เป็นแกนนำทีมเพื่อช่วยสนับสนุนเพื่อนร่วมรุ่น',
-    'รักษาจังหวะการทำงานและการดูแลสุขอนามัยส่วนบุคคล'
+    'รักษาจังหวะการทำงานและการดูแลสุขภาพส่วนบุคคล'
   ];
 
   if (redFlagScore >= 13) {
     tier = 'HIGH';
-    tierLabel = 'High Risk 🚩';
-    thaiLabel = 'ความเสี่ยงสูง 🚩 (High Risk)';
-    clinicalInterpretation = 'เสี่ยงสูงต่อภาวะ Burnout หรือการปรับตัวล้มเหลวระหว่างการเทรน ควรได้รับการดูแลทางจิตวิทยาเพิ่มเติม และติดตามอย่างใกล้ชิด';
-    riskColor = '#EF4444'; // Red
+    tierLabel = 'Priority Mentorship Support 🤝';
+    thaiLabel = 'แนะนำระบบ Mentor ดูแลใกล้ชิด (Priority Support)';
+    clinicalInterpretation = 'ผู้สมัครมีความรับผิดชอบสูงแต่อาจแบกรับความกดดันไว้มาก แนะนำให้อาจารย์เปิดบทสนทนาอย่างอบอุ่นเรื่องสุขอนามัยการนอนหลับและการระบายความตึงเครียด เพื่อจัดระบบประคับประคองที่ตรงจุด';
+    riskColor = '#F43F5E'; // Rose
     recommendations = [
-      'สัมภาษณ์เจาะลึกกลไกการรับมือกับภาวะแทรกซ้อนและการถูกตำหนิในที่สาธารณะ',
-      'ประเมินประวัติการพึ่งพาสาร/แอลกอฮอล์เพื่อการนอนหลับ และการรับมือกับอาการซึมเศร้า',
-      'หากรับเข้าฝึกอบรม จำเป็นต้องจัดระบบ Mentor ประกบดูแลและประเมินสุขภาพจิตทุกไตรมาส'
+      'ใช้บทสนทนาเชิงบวกเพื่อทำความเข้าใจบริบทการเผชิญความเหนื่อยล้าสะสมในเวร',
+      'วางแผนจัดระบบอาจารย์ที่ปรึกษา (Mentor) และ Buddy ประกบคู่ดูแลตั้งแต่วันแรกของการเทรน',
+      'ส่งเสริมการจัดสมดุลการนอนหลับ (Sleep Hygiene) และสนับสนุนพื้นที่ปลอดภัยในการปรึกษาปัญหา'
     ];
   } else if (redFlagScore >= 7) {
     tier = 'MODERATE';
-    tierLabel = 'Moderate Risk';
-    thaiLabel = 'ความเสี่ยงปานกลาง (Moderate Risk)';
-    clinicalInterpretation = 'พบพฤติกรรมรับมือเชิงลบปานกลาง ควรให้คำแนะนำเรื่อง Stress Management และมี Mentor คอยดูแลแนะนำ';
+    tierLabel = 'Standard Mentorship Support';
+    thaiLabel = 'ความต้องการการสนับสนุนระดับมาตรฐาน (Standard Support)';
+    clinicalInterpretation = 'พบจุดที่สามารถพัฒนาและส่งเสริมได้ เช่น เทคนิคผ่อนคลายความเครียดหลังเวร แนะนำจัดอาจารย์ที่ปรึกษา (Mentor) พูดคุยอย่างสม่ำเสมอ';
     riskColor = '#F59E0B'; // Amber
     recommendations = [
-      'มีแนวโน้มระบายอารมณ์หรือโทษตนเองเมื่อเกิดข้อผิดพลาดในการรักษา',
-      'แนะนำปฐมนิเทศเน้นทักษะ Resiliency & Stress Coping Skills',
-      'จัดให้อยู่ในกลุ่มที่ได้รับการติดตามจากอาจารย์ที่ปรึกษาอย่างสม่ำเสมอ'
+      'มีศักยภาพในการเรียนรู้สูงและสะท้อนตนเองได้ดี',
+      'แนะนำให้คำปรึกษาเรื่อง Stress Coping & Time Management ในช่วงปรับตัวปี 1',
+      'จัดให้อยู่ในกลุ่มที่ได้รับการติดตามจากอาจารย์ที่ปรึกษาอย่างต่อเนื่อง'
     ];
   }
 
@@ -216,6 +216,7 @@ export function calculateCandidateResult(
     candidateName,
     specialty: metadata?.specialty || 'โสต ศอ นาสิกวิทยา (ENT / Otolaryngology)',
     hospitalOrSchool: metadata?.hospitalOrSchool || 'ผู้สมัครแพทย์ประจำบ้าน',
+    candidateContextNote: metadata?.candidateContextNote || '',
     submittedAt: new Date().toISOString(),
     answers,
     optionPointBreakdown,
@@ -639,13 +640,16 @@ export function ensureCandidateData(cand: CandidateAssessmentResult): CandidateA
   if (needsRecalculation) {
     const recomputed = calculateCandidateResult(cand.candidateName || 'ผู้สมัคร', answers, {
       specialty: cand.specialty,
-      hospitalOrSchool: cand.hospitalOrSchool
+      hospitalOrSchool: cand.hospitalOrSchool,
+      candidateContextNote: cand.candidateContextNote
     });
     return {
       ...recomputed,
       id: cand.id || recomputed.id,
       candidateName: cand.candidateName || recomputed.candidateName,
       submittedAt: cand.submittedAt || recomputed.submittedAt,
+      candidateContextNote: cand.candidateContextNote || recomputed.candidateContextNote || '',
+      institutionalCarePlan: cand.institutionalCarePlan || [],
       committeeNotes: cand.committeeNotes || '',
       committeeStatus: cand.committeeStatus || recomputed.committeeStatus,
       interviewerRating: cand.interviewerRating || 0,
@@ -660,6 +664,8 @@ export function ensureCandidateData(cand: CandidateAssessmentResult): CandidateA
     ...cand,
     answers: answers,
     rpgProfile,
+    candidateContextNote: cand.candidateContextNote || '',
+    institutionalCarePlan: cand.institutionalCarePlan || [],
     committeeNotes: cand.committeeNotes || '',
     committeeStatus: cand.committeeStatus || 'UNREVIEWED',
     interviewerRating: cand.interviewerRating || 0,

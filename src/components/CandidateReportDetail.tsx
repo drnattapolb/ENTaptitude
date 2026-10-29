@@ -19,13 +19,15 @@ import {
   UserCheck,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  HeartHandshake
 } from 'lucide-react';
 import { CandidateAssessmentResult } from '../types/assessment';
 import { QUESTION_SETS } from '../data/assessmentData';
 import { generateInterviewProbingQuestions, ensureCandidateData } from '../utils/scoring';
 import { updateCandidateInStorage } from '../data/mockCandidates';
 import { ResultDashboard } from './ResultDashboard';
+import { MentorshipInterviewGuide } from './MentorshipInterviewGuide';
 
 interface CandidateReportDetailProps {
   candidate: CandidateAssessmentResult;
@@ -43,7 +45,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   onUpdateCandidate
 }) => {
   const candidate = ensureCandidateData(rawCandidate);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'RPG_STATUS' | 'DOMAINS' | 'DIMENSIONS' | 'QUESTIONS' | 'INTERVIEW'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'GUIDE' | 'RPG_STATUS' | 'DOMAINS' | 'DIMENSIONS' | 'QUESTIONS' | 'INTERVIEW'>('OVERVIEW');
   const [committeeNotes, setCommitteeNotes] = useState(candidate.committeeNotes || '');
   const [status, setStatus] = useState(candidate.committeeStatus || 'UNREVIEWED');
   const [rating, setRating] = useState<number>(candidate.interviewerRating || 0);
@@ -191,7 +193,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
             </p>
           </div>
 
-          {/* Red Flag Risk Badge */}
+          {/* Mentorship Support Needs Gauge */}
           <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#E2ECE5] shrink-0">
             <div
               className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center font-bold text-center border ${
@@ -208,7 +210,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
 
             <div>
               <div className="text-[10px] uppercase font-bold text-[#7E8F84]">
-                Red Flag Score
+                Support Needs Index
               </div>
               <div className={`text-sm font-bold flex items-center gap-1 ${
                 isHighRisk ? 'text-rose-700' : isModRisk ? 'text-amber-800' : 'text-[#375241]'
@@ -222,8 +224,24 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
           </div>
         </div>
 
-        {/* Clinical Advisory Alert */}
-        <div className={`mt-4 p-3.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ${
+        {/* Candidate's Context Note (Mentorship Conversation Starter) */}
+        {candidate.candidateContextNote ? (
+          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/60 to-amber-50/50 border border-emerald-200 text-xs leading-relaxed shadow-xs">
+            <div className="flex items-center gap-2 font-bold text-[#2D5C39] mb-1">
+              <span className="text-base">📝</span>
+              <span>บันทึกบริบทจากผู้สมัคร (Candidate's Context Note)</span>
+              <span className="text-[10px] text-[#4A6B56] bg-white px-2 py-0.5 rounded-full border border-emerald-200/80 font-medium">
+                Mentorship Conversation Starter
+              </span>
+            </div>
+            <p className="text-[#2C3831] bg-white/70 p-3 rounded-xl border border-emerald-100 font-medium italic">
+              "{candidate.candidateContextNote}"
+            </p>
+          </div>
+        ) : null}
+
+        {/* Mentorship Advisory Note */}
+        <div className={`mt-3 p-3.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ${
           isHighRisk
             ? 'bg-rose-50 border-rose-200 text-rose-900'
             : isModRisk
@@ -242,6 +260,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
         <div className="flex items-center gap-1.5 shrink-0">
           {[
             { id: 'OVERVIEW', label: 'ภาพรวม (Overview)', icon: Layers },
+            { id: 'GUIDE', label: '🤝 Mentorship Guide (15 Min)', icon: HeartHandshake },
             { id: 'RPG_STATUS', label: '🎮 RPG Infographic', icon: Sparkles },
             { id: 'DOMAINS', label: '4 โดเมนหลัก', icon: Activity },
             { id: 'DIMENSIONS', label: '14 มิติการรับมือ', icon: Brain },
@@ -285,6 +304,17 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
         </div>
       </div>
 
+      {/* TAB: MENTORSHIP INTERVIEW GUIDE (15-Min Protocol) */}
+      {activeTab === 'GUIDE' && (
+        <div className="space-y-6">
+          <MentorshipInterviewGuide
+            candidate={candidate}
+            onUpdateCandidate={onUpdateCandidate}
+            isCompact={false}
+          />
+        </div>
+      )}
+
       {/* TAB: RPG INFOGRAPHIC */}
       {activeTab === 'RPG_STATUS' && (
         <div className="rounded-3xl overflow-hidden shadow-2xl mb-6">
@@ -295,6 +325,13 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'OVERVIEW' && (
         <div className="space-y-6">
+          {/* Top Quick Mentorship Guide Widget (Compact View for Instant Access) */}
+          <MentorshipInterviewGuide
+            candidate={candidate}
+            onUpdateCandidate={onUpdateCandidate}
+            isCompact={true}
+          />
+
           {/* 4 Domains Overview Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {candidate.domainResults.map((domain) => (
@@ -559,28 +596,18 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
 
       {/* TAB 5: INTERVIEW & NOTES */}
       {activeTab === 'INTERVIEW' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Interview Questions */}
-          <div className="rounded-2xl p-5 organic-card bg-white border border-[#D6E2DA] space-y-3">
-            <h3 className="text-sm font-bold text-[#1F2823] flex items-center gap-2 pb-2 border-b border-[#EDF3EF]">
-              <MessageSquare className="w-4 h-4 text-[#4A6B56]" />
-              <span>แนวทางคำถามสัมภาษณ์ (Interview Guide)</span>
-            </h3>
-
-            <div className="space-y-2.5">
-              {interviewQuestions.map((q, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-[#FAF7F2] border border-[#E2ECE5] text-xs text-[#2C3831] leading-relaxed flex items-start gap-2">
-                  <span className="w-5 h-5 rounded-md bg-[#EBF2ED] text-[#375241] font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                    {idx + 1}
-                  </span>
-                  <span>{q}</span>
-                </div>
-              ))}
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Mentorship Protocol & Institutional Care Commitment (Left/Main) */}
+          <div className="lg:col-span-7 space-y-4">
+            <MentorshipInterviewGuide
+              candidate={candidate}
+              onUpdateCandidate={onUpdateCandidate}
+              isCompact={false}
+            />
           </div>
 
-          {/* Committee Notes */}
-          <div className="rounded-2xl p-5 organic-card bg-white border border-[#D6E2DA] space-y-4">
+          {/* Committee Notes (Right Column) */}
+          <div className="lg:col-span-5 rounded-2xl p-5 organic-card bg-white border border-[#D6E2DA] space-y-4 h-fit sticky top-16">
             <h3 className="text-sm font-bold text-[#1F2823] flex items-center gap-2 pb-2 border-b border-[#EDF3EF]">
               <Award className="w-4 h-4 text-[#D46B47]" />
               <span>บันทึกการประเมิน</span>
