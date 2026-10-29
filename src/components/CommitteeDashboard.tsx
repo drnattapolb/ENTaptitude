@@ -36,7 +36,7 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
   onResetData,
   onLogout
 }) => {
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(candidates[0]?.id || null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRisk, setFilterRisk] = useState<'ALL' | RiskTier>('ALL');
   const [sortBy, setSortBy] = useState<'DATE_DESC' | 'RISK_DESC' | 'RISK_ASC' | 'NAME_ASC'>('DATE_DESC');
