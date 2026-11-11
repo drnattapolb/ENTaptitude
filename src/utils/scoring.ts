@@ -8,6 +8,31 @@ import {
 } from '../types/assessment';
 import { DIMENSIONS, QUESTION_SETS } from '../data/assessmentData';
 
+// Pre-computed O(1) lookup tables to eliminate repetitive regex matches and nested searches during scoring
+const OPTION_TEXT_MAP = new Map<string, string>();
+for (const set of QUESTION_SETS) {
+  for (const opt of set.options) {
+    OPTION_TEXT_MAP.set(`${set.id}_${opt.id}`, opt.text);
+  }
+}
+
+const PREPARSED_DIMENSIONS = DIMENSIONS.map((dim) => {
+  const parseLoc = (loc: string) => {
+    const setMatch = loc.match(/ชุดที่\s*(\d+)/);
+    const optMatch = loc.match(/\(([A-D])\)/);
+    const setId = setMatch ? parseInt(setMatch[1], 10) : 1;
+    const optId = (optMatch ? optMatch[1] : 'A') as OptionKey;
+    const key = `${setId}_${optId}`;
+    return { setId, optId, key, loc, text: OPTION_TEXT_MAP.get(key) || '' };
+  };
+
+  return {
+    ...dim,
+    item1: parseLoc(dim.itemLocations[0]),
+    item2: parseLoc(dim.itemLocations[1])
+  };
+});
+
 export function calculateCandidateResult(
   candidateName: string,
   answers: Record<number, { most: OptionKey; least: OptionKey }>,
@@ -30,35 +55,11 @@ export function calculateCandidateResult(
     }
   }
 
-  // 2. Calculate 14 Dimension scores
-  const dimensionResults: DimensionResult[] = DIMENSIONS.map((dim) => {
-    // Parse item locations: e.g. "ชุดที่ 1 (A)", "ชุดที่ 4 (B)"
-    const item1Loc = dim.itemLocations[0];
-    const item2Loc = dim.itemLocations[1];
-
-    const parseLoc = (loc: string) => {
-      const setMatch = loc.match(/ชุดที่\s*(\d+)/);
-      const optMatch = loc.match(/\(([A-D])\)/);
-      const setId = setMatch ? parseInt(setMatch[1], 10) : 1;
-      const optId = (optMatch ? optMatch[1] : 'A') as OptionKey;
-      return { setId, optId };
-    };
-
-    const loc1 = parseLoc(item1Loc);
-    const loc2 = parseLoc(item2Loc);
-
-    const key1 = `${loc1.setId}_${loc1.optId}`;
-    const key2 = `${loc2.setId}_${loc2.optId}`;
-
-    const p1 = optionPointBreakdown[key1] ?? 1;
-    const p2 = optionPointBreakdown[key2] ?? 1;
+  // 2. Calculate 14 Dimension scores using pre-parsed O(1) references
+  const dimensionResults: DimensionResult[] = PREPARSED_DIMENSIONS.map((dim) => {
+    const p1 = optionPointBreakdown[dim.item1.key] ?? 1;
+    const p2 = optionPointBreakdown[dim.item2.key] ?? 1;
     const score = p1 + p2;
-
-    const set1Obj = QUESTION_SETS.find((s) => s.id === loc1.setId);
-    const opt1Obj = set1Obj?.options.find((o) => o.id === loc1.optId);
-
-    const set2Obj = QUESTION_SETS.find((s) => s.id === loc2.setId);
-    const opt2Obj = set2Obj?.options.find((o) => o.id === loc2.optId);
 
     return {
       id: dim.id,
@@ -71,14 +72,14 @@ export function calculateCandidateResult(
       maxScore: 4,
       details: {
         item1: {
-          location: item1Loc,
+          location: dim.item1.loc,
           points: p1,
-          text: opt1Obj?.text || ''
+          text: dim.item1.text
         },
         item2: {
-          location: item2Loc,
+          location: dim.item2.loc,
           points: p2,
-          text: opt2Obj?.text || ''
+          text: dim.item2.text
         }
       }
     };

@@ -11,6 +11,7 @@ import {
   resetCandidatesToDefault,
   updateCandidateInStorage
 } from './data/mockCandidates';
+import { subscribeToCandidates } from './services/candidateService';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'welcome' | 'candidate' | 'committee'>('welcome');
@@ -20,8 +21,18 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    // 1. Load initial cache instantly
     const loaded = getStoredCandidates();
     setCandidates(loaded);
+
+    // 2. Real-time multi-device subscription to Firestore central database
+    const unsubscribe = subscribeToCandidates((cloudCandidates) => {
+      setCandidates(cloudCandidates);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const showToast = (msg: string) => {
@@ -69,7 +80,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1F2823] flex flex-col selection:bg-[#4A6B56] selection:text-white font-sans antialiased">
+    <div className={`min-h-screen flex flex-col font-sans antialiased ${
+      currentView === 'welcome'
+        ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
+        : 'bg-[#FAF7F2] text-[#1F2823] selection:bg-[#4A6B56] selection:text-white'
+    }`}>
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3.5 rounded-2xl bg-[#375241] text-white text-xs font-bold shadow-xl shadow-[#375241]/25 border border-[#4A6B56] backdrop-blur-md animate-in slide-in-from-bottom duration-200">
@@ -77,8 +92,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Navigation Header (Shown during Candidate & Committee sessions) */}
-      {currentView !== 'welcome' && (
+      {/* Navigation Header (Shown during Committee sessions) */}
+      {currentView === 'committee' && (
         <Navbar
           currentView={currentView}
           candidateName={candidateNameHeader}
@@ -122,11 +137,11 @@ export default function App() {
         onSuccess={handleAuthSuccess}
       />
 
-      {/* Global Minimal Warm Footer (Shown when outside welcome screen) */}
-      {currentView !== 'welcome' && (
-        <footer className="border-t border-[#E2ECE5] py-5 px-6 text-center text-xs text-[#68776F] font-normal no-print bg-[#FAF7F2]">
+      {/* Global Minimal Warm Footer (Shown only during Committee view) */}
+      {currentView === 'committee' && (
+        <footer className="border-t border-[#E2ECE5] py-4 px-6 text-center text-xs text-[#68776F] font-normal no-print bg-[#FAF7F2]">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>ResiCope — ระบบสำรวจสถานการณ์และการปฏิบัติงานของแพทย์ประจำบ้าน</span>
+            <span className="font-semibold text-[#3D5C4A]">ResiCope</span>
             <span className="text-[#84948B] font-mono text-[11px]">สงวนลิขสิทธิ์เฉพาะคณะกรรมการคัดเลือกแพทย์ประจำบ้าน</span>
           </div>
         </footer>

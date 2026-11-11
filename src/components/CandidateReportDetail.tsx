@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Zap,
   MessageSquare,
@@ -55,7 +55,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   onBack,
   onUpdateCandidate
 }) => {
-  const candidate = ensureCandidateData(rawCandidate);
+  const candidate = useMemo(() => ensureCandidateData(rawCandidate), [rawCandidate]);
 
   // 3-TAB PROGRESSIVE DISCLOSURE ARCHITECTURE
   // Tab 1: ⚡ 15-Sec Quick View (Default)
@@ -90,35 +90,39 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   const prevCandidate = currentIndex > 0 && candidatesList ? candidatesList[currentIndex - 1] : null;
   const nextCandidate = currentIndex >= 0 && candidatesList && currentIndex < candidatesList.length - 1 ? candidatesList[currentIndex + 1] : null;
 
-  // 1. Extract Top 2 Adaptive Strengths
-  const topStrengths = candidate.rpgProfile?.activeBuffs && candidate.rpgProfile.activeBuffs.length > 0
-    ? candidate.rpgProfile.activeBuffs.slice(0, 2)
-    : [
-        { id: 'active', name: 'Active Problem Solving', icon: '⚔️', level: 'Lv.2', effectDescription: 'ลงมือแก้ไขสถานการณ์เฉพาะหน้าอย่างรวดเร็ว' },
-        { id: 'planning', name: 'Strategic Surgical Planning', icon: '🗺️', level: 'Lv.2', effectDescription: 'จัดลำดับขั้นตอนการรักษาอย่างเป็นระบบ' }
-      ];
+  // 1. Extract Top 2 Adaptive Strengths (Memoized)
+  const topStrengths = useMemo(() => {
+    return candidate.rpgProfile?.activeBuffs && candidate.rpgProfile.activeBuffs.length > 0
+      ? candidate.rpgProfile.activeBuffs.slice(0, 2)
+      : [
+          { id: 'active', name: 'Active Problem Solving', icon: '⚔️', level: 'Lv.2', effectDescription: 'ลงมือแก้ไขสถานการณ์เฉพาะหน้าอย่างรวดเร็ว' },
+          { id: 'planning', name: 'Strategic Surgical Planning', icon: '🗺️', level: 'Lv.2', effectDescription: 'จัดลำดับขั้นตอนการรักษาอย่างเป็นระบบ' }
+        ];
+  }, [candidate.rpgProfile?.activeBuffs]);
 
-  // 2. Extract Top 1 Support Focus (Reframed Red Flag)
-  const topSupportNeed = candidate.rpgProfile?.energyDrains && candidate.rpgProfile.energyDrains.length > 0
-    ? {
-        id: candidate.rpgProfile.energyDrains[0].id,
-        name: candidate.rpgProfile.energyDrains[0].name,
-        icon: candidate.rpgProfile.energyDrains[0].icon,
-        advice: candidate.rpgProfile.energyDrains[0].reframedAdvice || candidate.rpgProfile.energyDrains[0].reframedTitle
-      }
-    : {
-        id: 'self_blame',
-        name: 'Self-Blame Loop',
-        icon: '🌀',
-        advice: 'แนวโน้มตำหนิตนเองเมื่อผลลัพธ์ไม่เป็นไปตามคาด แนะนำให้ส่งเสริม Psychologically Safe Debriefing'
-      };
+  // 2. Extract Top 1 Support Focus (Reframed Red Flag) (Memoized)
+  const topSupportNeed = useMemo(() => {
+    return candidate.rpgProfile?.energyDrains && candidate.rpgProfile.energyDrains.length > 0
+      ? {
+          id: candidate.rpgProfile.energyDrains[0].id,
+          name: candidate.rpgProfile.energyDrains[0].name,
+          icon: candidate.rpgProfile.energyDrains[0].icon,
+          advice: candidate.rpgProfile.energyDrains[0].reframedAdvice || candidate.rpgProfile.energyDrains[0].reframedTitle
+        }
+      : {
+          id: 'self_blame',
+          name: 'Self-Blame Loop',
+          icon: '🌀',
+          advice: 'แนวโน้มตำหนิตนเองเมื่อผลลัพธ์ไม่เป็นไปตามคาด แนะนำให้ส่งเสริม Psychologically Safe Debriefing'
+        };
+  }, [candidate.rpgProfile?.energyDrains]);
 
   // 3. Extract Key Value / Primary Asset
   const primaryAsset = candidate.rpgProfile?.archetype?.description ||
     'ความละเอียดรอบคอบในการทำหัตถการ ความมุ่งมั่นในการเรียนรู้ และความพร้อมในการร่วมมือกับทีมแพทย์ผ่าตัด';
 
-  // 4. Dynamic Teleprompter Questions (High-Visibility)
-  const dynamicStrengthsQuestion = (() => {
+  // 4. Dynamic Teleprompter Questions (High-Visibility, Memoized)
+  const dynamicStrengthsQuestion = useMemo(() => {
     const firstStrength = topStrengths[0]?.name.toLowerCase() || '';
     if (firstStrength.includes('plan') || firstStrength.includes('active')) {
       return 'เห็นว่าคุณวางแผนเชิงรุกและจัดระบบงานได้ดีมาก ช่วยเล่าเคสฉุกเฉินหรือหัตถการยากที่คุณดึงทักษะนี้มาใช้ให้ฟังหน่อยครับ/ค่ะ?';
@@ -127,9 +131,9 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
       return 'คุณมีความโดดเด่นในการขอคำปรึกษาและประสานงานกับทีมแพทย์ ช่วยเล่าเหตุการณ์ที่คุณดึงความร่วมมือนี้มาช่วยคนไข้ให้ฟังหน่อยครับ/ค่ะ?';
     }
     return 'จากข้อมูลเห็นว่าคุณมีจุดแข็งด้านความยืดหยุ่นและการปรับมุมมองบวก ช่วยเล่าสถานการณ์ที่เจอปัญหาหนักแล้วคุณปรับสภาพจิตใจกลับมาได้อย่างไรครับ/ค่ะ?';
-  })();
+  }, [topStrengths]);
 
-  const dynamicSupportQuestion = (() => {
+  const dynamicSupportQuestion = useMemo(() => {
     const drainName = topSupportNeed.name.toLowerCase();
     if (drainName.includes('blame')) {
       return 'ในการผ่าตัดจริง หากเกิดภาวะแทรกซ้อนที่อยู่นอกเหนือการควบคุมจนเกิดความรู้สึกกังวลในใจ คุณอยากให้อาจารย์และภาควิชาช่วยซัพพอร์ตอย่างไรเพื่อประคองความมั่นใจของคุณ?';
@@ -138,7 +142,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
       return 'เมื่อต้องรับมือกับภาวะความล้าสะสมจากการอยู่เวรหนักต่อเนื่อง คุณอยากให้ภาควิชาช่วยซัพพอร์ตด้านสุขอนามัยการนอนหลับหรือตารางเวรอย่างไรเป็นพิเศษ?';
     }
     return 'เมื่อต้องรับมือกับภาวะความล้าสะสมจากการฝึกอบรม คุณอยากให้ภาควิชาช่วยซัพพอร์ตเรื่องไหนเป็นพิเศษเพื่อให้เรียนได้อย่างมีความสุขตลอด 3 ปี?';
-  })();
+  }, [topSupportNeed]);
 
   const handleCopyText = (text: string, id: string) => {
     navigator.clipboard.writeText(text);

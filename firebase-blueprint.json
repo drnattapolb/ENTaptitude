@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "candidate": {
+      "title": "Candidate Assessment Result",
+      "description": "Represents an ENT resident applicant's coping assessment submission and committee evaluation.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the candidate submission."
+        },
+        "candidateName": {
+          "type": "string",
+          "description": "Full name of the resident candidate.",
+          "maxLength": 150
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Medical specialty of the candidate.",
+          "maxLength": 100
+        },
+        "hospitalOrSchool": {
+          "type": "string",
+          "description": "Current hospital, medical school, or institution of the applicant.",
+          "maxLength": 200
+        },
+        "submittedAt": {
+          "type": "string",
+          "description": "ISO timestamp when the assessment was submitted."
+        },
+        "answers": {
+          "type": "object",
+          "description": "Map of set IDs to most and least option keys."
+        },
+        "optionPointBreakdown": {
+          "type": "object",
+          "description": "Detailed points mapping for each scenario option."
+        },
+        "dimensionResults": {
+          "type": "array",
+          "description": "Calculated scores across the 14 coping dimensions."
+        },
+        "domainResults": {
+          "type": "array",
+          "description": "Calculated percentages across the 4 coping domains."
+        },
+        "redFlagAnalysis": {
+          "type": "object",
+          "description": "Support Needs Index (Red Flag) score and risk tier."
+        },
+        "totalScore": {
+          "type": "number",
+          "description": "Total assessment points (always 28)."
+        },
+        "primaryDominantDomain": {
+          "type": "string",
+          "description": "Dominant coping domain identifier."
+        },
+        "rpgProfile": {
+          "type": "object",
+          "description": "Gamified RPG character sheet including archetype, buffs, and stats."
+        },
+        "candidateContextNote": {
+          "type": "string",
+          "description": "Optional context note written by candidate for the interviewers.",
+          "maxLength": 1500
+        },
+        "institutionalCarePlan": {
+          "type": "array",
+          "description": "Departmental care commitment items selected by the committee."
+        },
+        "committeeNotes": {
+          "type": "string",
+          "description": "Evaluation notes from the interview committee.",
+          "maxLength": 3000
+        },
+        "committeeStatus": {
+          "type": "string",
+          "description": "Review status determined by the committee.",
+          "enum": ["UNREVIEWED", "SHORTLISTED", "NEEDS_INTERVIEW_PROBE", "APPROVED", "CONCERN"]
+        },
+        "interviewerRating": {
+          "type": "number",
+          "description": "Rating out of 5 stars given by the interviewer."
+        }
+      },
+      "required": [
+        "id",
+        "candidateName",
+        "submittedAt",
+        "answers",
+        "dimensionResults",
+        "domainResults",
+        "redFlagAnalysis",
+        "totalScore"
+      ]
+    }
+  },
+  "firestore": {
+    "/candidates/{candidateId}": {
+      "schema": "candidate",
+      "description": "Collection of candidate situational coping profiles and committee reviews."
+    }
+  }
+}

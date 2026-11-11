@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Users,
   ShieldAlert,
@@ -44,85 +44,128 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'ROSTER' | 'GRAPHICS'>('ROSTER');
 
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 280);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowScrollTop(window.scrollY > 280);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const selectedCandidate = selectedCandidateId
-    ? (() => {
-        const found = candidates.find((c) => c.id === selectedCandidateId);
-        return found ? ensureCandidateData(found) : null;
-      })()
-    : null;
+  const selectedCandidate = useMemo(() => {
+    if (!selectedCandidateId) return null;
+    const found = candidates.find((c) => c.id === selectedCandidateId);
+    return found ? ensureCandidateData(found) : null;
+  }, [candidates, selectedCandidateId]);
 
-  const handleSelectCandidate = (cand: CandidateAssessmentResult) => {
+  const handleSelectCandidate = useCallback((cand: CandidateAssessmentResult) => {
     setSelectedCandidateId(cand.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
-  // Macro Metrics Calculations
-  const totalCount = candidates.length;
-  const lowRiskCount = candidates.filter((c) => c.redFlagAnalysis.tier === 'LOW').length;
-  const modRiskCount = candidates.filter((c) => c.redFlagAnalysis.tier === 'MODERATE').length;
-  const highRiskCount = candidates.filter((c) => c.redFlagAnalysis.tier === 'HIGH').length;
+  // Macro Metrics Calculations - single O(N) pass, memoized
+  const {
+    totalCount,
+    lowRiskCount,
+    modRiskCount,
+    highRiskCount,
+    lowPercent,
+    modPercent,
+    highPercent,
+    avgRedFlag,
+    avgD1,
+    avgD2,
+    avgD3,
+    avgD4,
+    radius,
+    circumference,
+    lowStroke,
+    modStroke,
+    highStroke
+  } = useMemo(() => {
+    const total = candidates.length;
+    let low = 0;
+    let mod = 0;
+    let high = 0;
+    let sumRedFlag = 0;
+    let sumD1 = 0;
+    let sumD2 = 0;
+    let sumD3 = 0;
+    let sumD4 = 0;
 
-  const lowPercent = totalCount > 0 ? Math.round((lowRiskCount / totalCount) * 100) : 0;
-  const modPercent = totalCount > 0 ? Math.round((modRiskCount / totalCount) * 100) : 0;
-  const highPercent = totalCount > 0 ? Math.round((highRiskCount / totalCount) * 100) : 0;
+    for (let i = 0; i < total; i++) {
+      const c = candidates[i];
+      const tier = c.redFlagAnalysis.tier;
+      if (tier === 'LOW') low++;
+      else if (tier === 'MODERATE') mod++;
+      else if (tier === 'HIGH') high++;
 
-  const avgRedFlagNum = totalCount > 0
-    ? candidates.reduce((acc, c) => acc + c.redFlagAnalysis.score, 0) / totalCount
-    : 0;
-  const avgRedFlag = avgRedFlagNum.toFixed(1);
-
-  const avgD1 = totalCount > 0
-    ? (candidates.reduce((acc, c) => acc + (c.domainResults[0]?.percentage || 0), 0) / totalCount).toFixed(1)
-    : '0';
-  const avgD2 = totalCount > 0
-    ? (candidates.reduce((acc, c) => acc + (c.domainResults[1]?.percentage || 0), 0) / totalCount).toFixed(1)
-    : '0';
-  const avgD3 = totalCount > 0
-    ? (candidates.reduce((acc, c) => acc + (c.domainResults[2]?.percentage || 0), 0) / totalCount).toFixed(1)
-    : '0';
-  const avgD4 = totalCount > 0
-    ? (candidates.reduce((acc, c) => acc + (c.domainResults[3]?.percentage || 0), 0) / totalCount).toFixed(1)
-    : '0';
-
-  // SVG Donut Chart Math
-  const radius = 64;
-  const circumference = 2 * Math.PI * radius; // ~402.12
-  const lowStroke = totalCount > 0 ? (lowRiskCount / totalCount) * circumference : 0;
-  const modStroke = totalCount > 0 ? (modRiskCount / totalCount) * circumference : 0;
-  const highStroke = totalCount > 0 ? (highRiskCount / totalCount) * circumference : 0;
-
-  const filteredCandidates = candidates.filter((c) => {
-    const matchesSearch =
-      c.candidateName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (c.hospitalOrSchool && c.hospitalOrSchool.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    const matchesRisk = filterRisk === 'ALL' || c.redFlagAnalysis.tier === filterRisk;
-    return matchesSearch && matchesRisk;
-  });
-
-  const sortedCandidates = [...filteredCandidates].sort((a, b) => {
-    if (sortBy === 'DATE_DESC') {
-      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+      sumRedFlag += c.redFlagAnalysis.score || 0;
+      sumD1 += c.domainResults[0]?.percentage || 0;
+      sumD2 += c.domainResults[1]?.percentage || 0;
+      sumD3 += c.domainResults[2]?.percentage || 0;
+      sumD4 += c.domainResults[3]?.percentage || 0;
     }
-    if (sortBy === 'RISK_DESC') {
-      return b.redFlagAnalysis.score - a.redFlagAnalysis.score;
-    }
-    if (sortBy === 'RISK_ASC') {
-      return a.redFlagAnalysis.score - b.redFlagAnalysis.score;
-    }
-    if (sortBy === 'NAME_ASC') {
-      return a.candidateName.localeCompare(b.candidateName, 'th');
-    }
-    return 0;
-  });
+
+    const rad = 64;
+    const circ = 2 * Math.PI * rad; // ~402.12
+
+    return {
+      totalCount: total,
+      lowRiskCount: low,
+      modRiskCount: mod,
+      highRiskCount: high,
+      lowPercent: total > 0 ? Math.round((low / total) * 100) : 0,
+      modPercent: total > 0 ? Math.round((mod / total) * 100) : 0,
+      highPercent: total > 0 ? Math.round((high / total) * 100) : 0,
+      avgRedFlag: total > 0 ? (sumRedFlag / total).toFixed(1) : '0.0',
+      avgD1: total > 0 ? (sumD1 / total).toFixed(1) : '0',
+      avgD2: total > 0 ? (sumD2 / total).toFixed(1) : '0',
+      avgD3: total > 0 ? (sumD3 / total).toFixed(1) : '0',
+      avgD4: total > 0 ? (sumD4 / total).toFixed(1) : '0',
+      radius: rad,
+      circumference: circ,
+      lowStroke: total > 0 ? (low / total) * circ : 0,
+      modStroke: total > 0 ? (mod / total) * circ : 0,
+      highStroke: total > 0 ? (high / total) * circ : 0
+    };
+  }, [candidates]);
+
+  const sortedCandidates = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = candidates.filter((c) => {
+      const matchesSearch =
+        !query ||
+        c.candidateName.toLowerCase().includes(query) ||
+        c.id.toLowerCase().includes(query) ||
+        (Boolean(c.hospitalOrSchool) && c.hospitalOrSchool!.toLowerCase().includes(query));
+
+      const matchesRisk = filterRisk === 'ALL' || c.redFlagAnalysis.tier === filterRisk;
+      return matchesSearch && matchesRisk;
+    });
+
+    return filtered.sort((a, b) => {
+      if (sortBy === 'DATE_DESC') {
+        return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+      }
+      if (sortBy === 'RISK_DESC') {
+        return b.redFlagAnalysis.score - a.redFlagAnalysis.score;
+      }
+      if (sortBy === 'RISK_ASC') {
+        return a.redFlagAnalysis.score - b.redFlagAnalysis.score;
+      }
+      if (sortBy === 'NAME_ASC') {
+        return a.candidateName.localeCompare(b.candidateName, 'th');
+      }
+      return 0;
+    });
+  }, [candidates, searchQuery, filterRisk, sortBy]);
 
   const handleExportCSV = () => {
     const headers = [
@@ -203,10 +246,13 @@ export const CommitteeDashboard: React.FC<CommitteeDashboardProps> = ({
       {/* 1. COMPACT TOP HEADER (Optimized for iPhone 14 Pro Max & Desktop) */}
       <div className="flex items-center justify-between gap-2 mb-3 sm:mb-5 pb-2.5 border-b border-[#D6E2DA]/80">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#4A6B56]">
-            <span className="w-2 h-2 rounded-full bg-[#4A6B56] shrink-0" />
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#4A6B56] flex-wrap">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span className="truncate">Selection Committee Portal</span>
             <span className="text-[#88998E] hidden sm:inline">• แพทย์ประจำบ้าน</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EBF2ED] text-[#2C4A37] border border-[#C6D8CC] font-mono flex items-center gap-1">
+              <span>☁️ Cloud Sync Active</span>
+            </span>
           </div>
           <h1 className="text-base sm:text-2xl font-extrabold text-[#1F2823] tracking-tight truncate">
             ผลประเมินจิตวิทยาผู้สมัคร

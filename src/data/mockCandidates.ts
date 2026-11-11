@@ -105,6 +105,7 @@ export function getStoredCandidates(): CandidateAssessmentResult[] {
 }
 
 export function saveCandidateResult(result: CandidateAssessmentResult): void {
+  // 1. Update local cache immediately
   try {
     const list = getStoredCandidates();
     const updated = [result, ...list.filter((c) => c.id !== result.id)];
@@ -112,9 +113,24 @@ export function saveCandidateResult(result: CandidateAssessmentResult): void {
   } catch (e) {
     console.error('Failed to save candidate to localStorage', e);
   }
+
+  // 2. Asynchronously broadcast to central Firestore cloud server (memoized module promise)
+  getCandidateService()
+    .then(({ saveCandidateToCloud }) => saveCandidateToCloud(result))
+    .catch((err) => console.error('Cloud transmission error:', err));
+}
+
+// Module-level memoized promise to avoid re-resolving dynamic import on each call
+let candidateServicePromise: Promise<typeof import('../services/candidateService')> | null = null;
+function getCandidateService() {
+  if (!candidateServicePromise) {
+    candidateServicePromise = import('../services/candidateService');
+  }
+  return candidateServicePromise;
 }
 
 export function updateCandidateInStorage(result: CandidateAssessmentResult): void {
+  // 1. Update local cache
   try {
     const list = getStoredCandidates();
     const updated = list.map((c) => (c.id === result.id ? result : c));
@@ -122,13 +138,24 @@ export function updateCandidateInStorage(result: CandidateAssessmentResult): voi
   } catch (e) {
     console.error('Failed to update candidate in localStorage', e);
   }
+
+  // 2. Broadcast updates to Firestore
+  getCandidateService()
+    .then(({ updateCandidateInCloud }) => updateCandidateInCloud(result))
+    .catch((err) => console.error('Cloud update transmission error:', err));
 }
 
 export function resetCandidatesToDefault(): CandidateAssessmentResult[] {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_MOCK_CANDIDATES));
-    return INITIAL_MOCK_CANDIDATES;
-  } catch {
-    return INITIAL_MOCK_CANDIDATES;
+  } catch (e) {
+    console.error('LocalStorage reset error', e);
   }
+
+  import('../services/candidateService')
+    .then(({ resetCandidatesInCloud }) => resetCandidatesInCloud())
+    .catch((err) => console.error('Cloud reset error:', err));
+
+  return INITIAL_MOCK_CANDIDATES;
 }
+
