@@ -25,7 +25,11 @@ import {
   TrendingUp,
   Send,
   Plus,
-  Trash2
+  Trash2,
+  CheckCircle2,
+  Lightbulb,
+  Target,
+  Bot
 } from 'lucide-react';
 import { CandidateAssessmentResult, RiskTier } from '../types/assessment';
 import { QUESTION_SETS } from '../data/assessmentData';
@@ -143,6 +147,191 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
     }
     return 'เมื่อต้องรับมือกับภาวะความล้าสะสมจากการฝึกอบรม คุณอยากให้ภาควิชาช่วยซัพพอร์ตเรื่องไหนเป็นพิเศษเพื่อให้เรียนได้อย่างมีความสุขตลอด 3 ปี?';
   }, [topSupportNeed]);
+
+  // Executive Snapshot Data (5-Second Scan)
+  const executiveSnapshot = useMemo(() => {
+    const archetypeTitle = candidate.rpgProfile?.archetype?.title || '🎖️ The Tactical Master';
+    const archetypeThai = candidate.rpgProfile?.archetype?.thaiTitle || 'นักวางแผนเชิงรุก';
+    const archetypeDesc = candidate.rpgProfile?.archetype?.description ||
+      'วางแผนเชิงระบบ จัดลำดับความสำคัญของหัตถการได้อย่างแม่นยำ พร้อมประสานงานในห้องผ่าตัด';
+    
+    const adaptiveDomain = candidate.domainResults?.find((d) => d.id === 1);
+    const adaptivePercent = adaptiveDomain ? Math.round(adaptiveDomain.percentage) : 75;
+
+    const buffs = candidate.rpgProfile?.activeBuffs && candidate.rpgProfile.activeBuffs.length > 0
+      ? candidate.rpgProfile.activeBuffs.slice(0, 2)
+      : topStrengths;
+
+    const primaryDrain = candidate.rpgProfile?.energyDrains && candidate.rpgProfile.energyDrains.length > 0
+      ? candidate.rpgProfile.energyDrains[0]
+      : null;
+
+    const riskTier = candidate.redFlagAnalysis?.tier || 'LOW';
+    const redFlagScore = candidate.redFlagAnalysis?.score ?? 0;
+
+    return {
+      archetypeTitle,
+      archetypeThai,
+      archetypeDesc,
+      adaptivePercent,
+      buffs,
+      primaryDrain,
+      riskTier,
+      redFlagScore
+    };
+  }, [candidate, topStrengths]);
+
+  // Dynamic Strength Prompts for Step 2
+  const dynamicStrengthPrompts = useMemo(() => {
+    const primaryBuff = candidate.rpgProfile?.activeBuffs?.[0]?.name?.toLowerCase() || '';
+    const secondaryBuff = candidate.rpgProfile?.activeBuffs?.[1]?.name?.toLowerCase() || '';
+
+    // Prompt 2A: Ice-breaker on primary strength
+    let prompt2A = {
+      tag: 'กลไกเผชิญปัญหาหลัก (Primary Coping)',
+      badgeColor: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+      question: 'จากผลประเมินพบว่าคุณมีความโดดเด่นด้านการวางแผนเชิงรุกและจัดลำดับความสำคัญได้ดีมาก อยากให้ช่วยเล่าเคสฉุกเฉินหรือหัตถการยากที่คุณดึงทักษะนี้มาใช้คลี่คลายปัญหาให้ฟังหน่อยครับ/ค่ะ?',
+      intent: 'เปิดโอกาสให้ผู้สมัครเล่าความสำเร็จจริงในชีวิตเวชปฏิบัติ เพื่อสร้างความมั่นใจและความผ่อนคลาย'
+    };
+
+    if (primaryBuff.includes('alliance') || primaryBuff.includes('support') || primaryBuff.includes('social')) {
+      prompt2A = {
+        tag: 'การแสวงหาความช่วยเหลือ (Help-Seeking Alliance)',
+        badgeColor: 'bg-teal-950 text-teal-300 border-teal-800',
+        question: 'ผลประเมินแสดงว่าคุณมีความถนัดอย่างยิ่งในการปรึกษาอาจารย์และขอความร่วมมือจากทีม อยากให้เล่าสถานการณ์ที่คุณดึงพลังของทีมสหสาขาวิชาชีพมาช่วยรักษาเคสที่มีความซับซ้อน?',
+        intent: 'ชื่นชมการเปิดรับและประเมินระดับความอ่อนน้อมถ่อมตน (Humility) ในการทำงานร่วมกับผู้อื่น'
+      };
+    } else if (primaryBuff.includes('refram') || primaryBuff.includes('positive') || primaryBuff.includes('humor')) {
+      prompt2A = {
+        tag: 'การมองบวกและยืดหยุ่น (Positive Reframing)',
+        badgeColor: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+        question: 'คุณมีคะแนนด้านการปรับมุมมองเชิงบวกและความยืดหยุ่นทางอารมณ์สูงมาก เมื่อต้องเผชิญกับวันที่ทุกอย่างไม่เป็นไปตามแผน คุณมีวิธีคุยกับตัวเองเพื่อรีเซ็ตสติและพลังใจอย่างไร?',
+        intent: 'สำรวจทักษะ Emotional Agility และ Cognitive Reframing ภายใต้ความกดดัน'
+      };
+    }
+
+    // Prompt 2B: Deep-dive Surgical Teamwork / OR Dynamics
+    const prompt2B = {
+      tag: 'การทำงานร่วมกับทีมผ่าตัด (Surgical Team Dynamics)',
+      badgeColor: 'bg-cyan-950 text-cyan-300 border-cyan-800',
+      question: secondaryBuff.includes('support') || primaryBuff.includes('support')
+        ? 'ในห้องผ่าตัด ENT ที่อาจเกิดภาวะเลือดออกเฉียบพลันหรือ airway compromise คุณคิดว่าจะประสานงานกับวิสัญญีแพทย์และพยาบาลส่งเครื่องมืออย่างไรให้ทีมทำงานสอดประสานกันอย่างราบรื่น?'
+        : 'เวลาที่คุณต้องทำหัตถการหรือดูแลคนไข้ร่วมกับอาจารย์หรือพี่เดนท์ที่มีสไตล์การทำงานแตกต่างจากคุณ คุณปรับจูนการสื่อสารเพื่อความปลอดภัยของคนไข้อย่างไร?',
+      intent: 'ทดสอบความเข้าใจต่อวัฒนธรรมความปลอดภัยของผู้ป่วย (Patient Safety) และการสื่อสารข้ามสายวิชาชีพ'
+    };
+
+    return { prompt2A, prompt2B };
+  }, [candidate.rpgProfile?.activeBuffs]);
+
+  // Dynamic Support Prompts for Step 3
+  const dynamicSupportPrompts = useMemo(() => {
+    const drainId = candidate.rpgProfile?.energyDrains?.[0]?.id || '';
+    const drainName = candidate.rpgProfile?.energyDrains?.[0]?.name?.toLowerCase() || '';
+
+    // Prompt 3A: Gentle normalizing probe
+    const prompt3A = {
+      tag: 'สร้างพื้นที่ปลอดภัย (Normalizing Stress)',
+      badgeColor: 'bg-amber-950 text-amber-300 border-amber-800',
+      question: 'การเรียน ENT ปี 1 มีความชันของการเรียนรู้สูงมาก ทุกคนต้องเคยผ่านช่วงที่เหนื่อยหรือท้อ อยากทราบว่าเวลาที่คุณรู้สึกล้าสะสม สัญญาณเตือนแรกสุดของตัวคุณคืออะไร และปกติคุณฟื้นฟูตัวเองอย่างไร?',
+      intent: 'สังเกตระดับ Self-Awareness ของผู้สมัครว่ารับรู้สัญญาณความเหนื่อยล้าของตนเองได้เร็วเพียงใด'
+    };
+
+    // Prompt 3B: Targeted to identified vulnerability
+    let prompt3B = {
+      tag: 'ความต้องการการสนับสนุน (Mentorship Support Need)',
+      badgeColor: 'bg-orange-950 text-orange-300 border-orange-800',
+      question: 'หากได้รับการคัดเลือกเข้าเรียน คุณอยากให้อาจารย์ที่ปรึกษาและภาควิชาช่วยสนับสนุนในเรื่องใดเป็นพิเศษ เพื่อให้คุณเรียนและฝึกผ่าตัดได้อย่างมั่นใจและมีความสุขตลอด 3 ปี?',
+      interviewerTip: 'เปิดโอกาสให้ผู้สมัครสะท้อนความต้องการโดยไม่กลัวว่าจะถูกตัดคะแนน'
+    };
+
+    if (drainId.includes('blame') || drainName.includes('blame')) {
+      prompt3B = {
+        tag: 'ภาวะตำหนิตนเอง (Self-Blame Loop)',
+        badgeColor: 'bg-rose-950 text-rose-300 border-rose-800',
+        question: 'ในการผ่าตัดจริง บางครั้งผลลัพธ์อาจไม่เป็นไปตามที่เราคาดหวังแม้เราจะทำเต็มที่แล้ว หากเกิดเหตุการณ์แบบนี้แล้วคุณเริ่มรู้สึกโทษตัวเอง คุณอยากให้พี่เดนท์หรืออาจารย์ช่วย Debrief อย่างไรเพื่อให้ก้าวข้ามความรู้สึกนี้ไปได้?',
+        interviewerTip: 'สังเกตว่าผู้สมัครเปิดใจรับ Psychologically Safe Debriefing หรือไม่ และมีแนวโน้มแบกรับความผิดพลาดไว้คนเดียวหรือไม่'
+      };
+    } else if (drainId.includes('substance') || drainName.includes('substance') || drainId.includes('sleep') || drainName.includes('sleep')) {
+      prompt3B = {
+        tag: 'สุขอนามัยการนอนและความล้า (Fatigue Management)',
+        badgeColor: 'bg-rose-950 text-rose-300 border-rose-800',
+        question: 'เวรฉุกเฉินทาง ENT บางคืนอาจมี foreign body หรือ airway obstruction เข้ามาต่อเนื่องจนแทบไม่ได้พัก หากคุณรู้สึกว่าสมาธิตัวเองเริ่มดร็อปลง คุณมีเกณฑ์ตัดสินใจอย่างไรว่าจะขอให้อาจารย์เวรหรือพี่เดนท์ช่วยเปลี่ยนมือ?',
+        interviewerTip: 'ประเมินความตระหนักรู้ต่อข้อจำกัดทางกายภาพเพื่อความปลอดภัยสูงสุดของคนไข้ (Willingness to call for backup)'
+      };
+    } else if (drainId.includes('disengage') || drainName.includes('avoid') || drainName.includes('disengage')) {
+      prompt3B = {
+        tag: 'การรับมือภาวะโดดเดี่ยว (Engagement & Trust)',
+        badgeColor: 'bg-orange-950 text-orange-300 border-orange-800',
+        question: 'เมื่อต้องเจอกับความกดดันสูงหรืออาจารย์ฟีดแบ็กงานที่เข้มงวด บางคนอาจมีความรู้สึกอยากถอยห่างจากทีม หากคุณเริ่มรู้สึกแบบนี้ มีอะไรที่ภาควิชาสามารถทำได้เพื่อส่งสัญญาณว่าเราพร้อมยืนเคียงข้างคุณเสมอ?',
+        interviewerTip: 'ประเมินระดับ Institutional Trust และวางแผนป้องกันไม่ให้แพทย์ประจำบ้านรู้สึกโดดเดี่ยว'
+      };
+    } else if (drainId.includes('vent') || drainName.includes('vent') || drainName.includes('denial')) {
+      prompt3B = {
+        tag: 'การระบายความเครียดอย่างสร้างสรรค์ (Constructive Venting)',
+        badgeColor: 'bg-amber-950 text-amber-300 border-amber-800',
+        question: 'เวลาที่คุณเจอเคสที่น่าอึดอัดใจหรือมีความเห็นต่างในทีมรักษา คุณมีช่องทางระบายความรู้สึกที่ปลอดภัยอย่างไร และอยากให้ภาควิชามีระบบเปิดรับฟังอย่างไรที่ไม่ส่งผลกระทบต่อทีม?',
+        interviewerTip: 'สำรวจช่องทางการสื่อสารและเตรียมความพร้อมในการจัดพื้นที่รับฟัง (Safe Listening Space)'
+      };
+    }
+
+    return { prompt3A, prompt3B };
+  }, [candidate.rpgProfile?.energyDrains, candidate.redFlagAnalysis]);
+
+  // Smart Institutional Care Commitment Recommendations with AI Rationales
+  const smartCareRecommendations = useMemo(() => {
+    const drainId = candidate.rpgProfile?.energyDrains?.[0]?.id || '';
+    const drainName = candidate.rpgProfile?.energyDrains?.[0]?.name?.toLowerCase() || '';
+    const redFlagScore = candidate.redFlagAnalysis?.score ?? 0;
+    const isModerateOrHigh = candidate.redFlagAnalysis?.tier !== 'LOW' || redFlagScore >= 3;
+    const hasSelfBlame = drainId.includes('blame') || drainName.includes('blame');
+    const hasFatigueRisk = drainId.includes('substance') || drainName.includes('substance') || drainId.includes('sleep') || drainName.includes('sleep') || redFlagScore >= 4;
+
+    return [
+      {
+        text: 'จัด Senior Resident Buddy ช่วยประคองช่วง 3 เดือนแรก',
+        recommended: isModerateOrHigh || hasSelfBlame,
+        rationale: 'ช่วยลดความเคว้งในช่วงปรับตัวเข้าสู่ระบบเวรและหัตถการผ่าตัด มีรุ่นพี่คอยประกบให้คำปรึกษาแบบไม่เป็นทางการ'
+      },
+      {
+        text: 'เข้าโครงการ Faculty Mentorship ด้านการปรับตัว',
+        recommended: true,
+        rationale: 'เสริมสร้างสัมพันธภาพและกระบวนการตัดสินใจทางคลินิกร่วมกับอาจารย์ที่ปรึกษาประจำตัวอย่างใกล้ชิด'
+      },
+      {
+        text: 'ติดตามสภาวะความล้าและตารางเวรเป็นพิเศษ',
+        recommended: hasFatigueRisk,
+        rationale: 'ตรวจพบความเสี่ยงด้านความล้าสะสมหรือสุขอนามัยการนอน การดูแลตารางพักจะช่วยรักษาความแม่นยำในการผ่าตัด'
+      },
+      {
+        text: 'จัดเซสชั่น Debrief เชิงสร้างสรรค์หลังเคสผ่าตัดฉุกเฉินหรือภาวะแทรกซ้อน',
+        recommended: hasSelfBlame || isModerateOrHigh,
+        rationale: 'ป้องกันการเกิด Self-Blame Loop หรือความรู้สึกผิดเดี่ยวหลังเคสวิกฤต โดยเปลี่ยนเป็นบทเรียนพัฒนาทักษะร่วมกัน'
+      },
+      {
+        text: 'ระบบเปิดรับฟังความเครียดแบบไม่เปิดเผยตัวตน (Safe Anonymous Listening)',
+        recommended: candidate.redFlagAnalysis?.tier === 'HIGH' || redFlagScore >= 5,
+        rationale: 'มอบพื้นที่ปลอดภัยทางจิตวิทยาให้ผู้สมัครเข้าถึงการดูแลสุขภาพใจได้ตลอดเวลาโดยไม่มีผลต่อการตัดเกรด'
+      }
+    ];
+  }, [candidate.rpgProfile?.energyDrains, candidate.redFlagAnalysis]);
+
+  // Handle select all recommended care plans
+  const handleApplyAllRecommendations = () => {
+    const recommendedTexts = smartCareRecommendations
+      .filter((item) => item.recommended)
+      .map((item) => item.text);
+    
+    const merged = Array.from(new Set([...carePlan, ...recommendedTexts]));
+    setCarePlan(merged);
+
+    const updatedCandidate: CandidateAssessmentResult = {
+      ...candidate,
+      institutionalCarePlan: merged
+    };
+    updateCandidateInStorage(updatedCandidate);
+    onUpdateCandidate(updatedCandidate);
+    triggerAutoSaveToast();
+  };
 
   const handleCopyText = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -636,27 +825,168 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
         {activeTab === 'MENTORSHIP_PROTOCOL' && (
           <div className="space-y-6 animate-in fade-in duration-150">
             
-            {/* Header Description */}
-            <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-6 backdrop-blur-md shadow-xl">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-10 h-10 rounded-2xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 text-xl">
-                  💬
+            {/* Header Description & Co-Pilot Status */}
+            <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-5 sm:p-6 backdrop-blur-md shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-cyan-950/80 border border-cyan-800/80 flex items-center justify-center text-cyan-400 text-xl shrink-0 shadow-inner">
+                  <Bot className="w-6 h-6 text-cyan-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">
-                    15-Minute Mentorship Interview Protocol
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    แนวทางบทสนทนา 3 ขั้นตอน เพื่อสร้างความผูกพันและทำคำมั่นสัญญาการดูแล (Institutional Care)
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-white">
+                      15-Minute Mentorship Protocol & AI Co-Pilot
+                    </h2>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    ระบบผู้ช่วยสัมภาษณ์อัจฉริยะ ปรับบริบทคำถามตามข้อมูลผลประเมินรายบุคคล (Tailored Interview Guide)
                   </p>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-cyan-950/60 border border-cyan-800 text-cyan-300 text-xs font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span>AI Co-Pilot Active</span>
+                </span>
+              </div>
             </div>
 
-            {/* 1. 3-STEP INTERVIEW ROADMAP */}
+            {/* ======================================================== */}
+            {/* A. APPLICANT EXECUTIVE SNAPSHOT (5-SECOND SCAN)           */}
+            {/* ======================================================== */}
+            <div className="rounded-3xl bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-slate-950 border border-slate-800 p-5 sm:p-6 backdrop-blur-md shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between mb-3 border-b border-slate-800/80 pb-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Applicant Executive Snapshot (ภาพรวมจิตวิทยาผู้สมัครใน 5 วินาที)</span>
+                </div>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  ID: {candidate.id} • {candidate.candidateName}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* 1. Primary Coping Style */}
+                <div className="rounded-2xl p-4 bg-slate-950/70 border border-indigo-900/40 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">
+                        Primary Coping Style
+                      </span>
+                      <span className="text-xs font-mono font-bold text-indigo-300 bg-indigo-950/80 border border-indigo-800 px-2 py-0.5 rounded-lg">
+                        {executiveSnapshot.adaptivePercent}% Adaptive
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-1.5 mb-1">
+                      <span>{executiveSnapshot.archetypeTitle}</span>
+                    </h4>
+                    <p className="text-xs text-indigo-200/80 font-medium mb-2">
+                      ({executiveSnapshot.archetypeThai})
+                    </p>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      {executiveSnapshot.archetypeDesc}
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5 text-[11px] text-indigo-300">
+                    <Target className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                    <span>เน้นการแก้ปัญหาเชิงตรรกะและการวางแผนขั้นตอน</span>
+                  </div>
+                </div>
+
+                {/* 2. Top Strengths (Adaptive Buffs) */}
+                <div className="rounded-2xl p-4 bg-slate-950/70 border border-emerald-900/40 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
+                        Top Strengths (Active Buffs)
+                      </span>
+                      <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded-lg">
+                        {executiveSnapshot.buffs.length} จุดเด่นหลัก
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-2 mt-1">
+                      {executiveSnapshot.buffs.map((buff, bIdx) => (
+                        <div key={bIdx} className="p-2 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-xs">
+                          <div className="flex items-center justify-between font-bold text-emerald-300 mb-0.5">
+                            <span className="flex items-center gap-1.5">
+                              <span>{buff.icon}</span>
+                              <span>{buff.name}</span>
+                            </span>
+                            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/60">
+                              {buff.level || 'Lv.2'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-300 line-clamp-2">
+                            {buff.effectDescription}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5 text-[11px] text-emerald-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>พร้อมรับมือสถานการณ์ฉุกเฉินและการเรียนรู้ทางคลินิก</span>
+                  </div>
+                </div>
+
+                {/* 3. Focus Area / Potential Risk */}
+                <div className="rounded-2xl p-4 bg-slate-950/70 border border-amber-900/40 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                        Focus Area / Support Need
+                      </span>
+                      <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg border ${
+                        executiveSnapshot.riskTier === 'HIGH'
+                          ? 'bg-rose-950/80 border-rose-800 text-rose-300'
+                          : executiveSnapshot.riskTier === 'MODERATE'
+                          ? 'bg-amber-950/80 border-amber-800 text-amber-300'
+                          : 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
+                      }`}>
+                        Tier: {executiveSnapshot.riskTier}
+                      </span>
+                    </div>
+
+                    {executiveSnapshot.primaryDrain ? (
+                      <div className="p-2 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs mb-2">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-300 mb-0.5">
+                          <span>{executiveSnapshot.primaryDrain.icon}</span>
+                          <span>{executiveSnapshot.primaryDrain.name}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-300">
+                          {executiveSnapshot.primaryDrain.reframedAdvice || executiveSnapshot.primaryDrain.reframedTitle}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-2 rounded-xl bg-emerald-950/30 border border-emerald-800/40 text-xs mb-2">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-300 mb-0.5">
+                          <span>🛡️</span>
+                          <span>ไม่มีจุดเสี่ยงระดับรุนแรง</span>
+                        </div>
+                        <p className="text-[11px] text-slate-300">
+                          เน้นการเสริมสร้างสุขอนามัยการนอนและการประคองช่วงปรับตัว 3 เดือนแรก
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-1.5 text-[11px] text-amber-300">
+                    <HeartHandshake className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>คำแนะนำ: แนะนำให้จัด Senior Buddy หรือ Mentor ประกบ</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* ======================================================== */}
+            {/* B. 3-STEP DYNAMIC INTERVIEW ROADMAP                      */}
+            {/* ======================================================== */}
             <div className="space-y-4">
               
-              {/* STEP 1: OPENING (1-2 Min) */}
+              {/* STEP 1: OPENING (1-2 Min) — Psychological Safety */}
               <div className="rounded-2xl p-5 bg-slate-900/90 border border-sky-800/60 shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -673,24 +1003,37 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
                 </div>
 
                 <div className="rounded-xl bg-slate-950 p-4 border border-sky-900/80 relative group">
-                  <p className="text-xs font-semibold text-sky-400 mb-1">
-                    🗣️ สคริปต์แนะนำให้อาจารย์กล่าวเปิดบทสนทนา:
+                  <p className="text-xs font-semibold text-sky-400 mb-1 flex items-center gap-1.5">
+                    <span>🗣️ สคริปต์แนะนำให้อาจารย์กล่าวเปิดบทสนทนา:</span>
                   </p>
-                  <blockquote className="text-sm sm:text-base text-slate-100 font-medium italic pr-16 leading-relaxed">
-                    &ldquo;ผลประเมินนี้ไม่ได้มีไว้เพื่อตัดคะแนน แต่มีไว้เพื่อให้ภาควิชาเข้าใจว่าจะช่วยซัพพอร์ตคุณอย่างไรให้เรียนได้อย่างมีความสุขตลอด 3 ปีในหลักสูตร ENT&rdquo;
+                  <blockquote className="text-sm sm:text-base text-slate-100 font-medium italic pr-20 leading-relaxed">
+                    &ldquo;ผลประเมินนี้ไม่ได้มีไว้เพื่อตัดคะแนนหรือชี้วัดความเก่ง แต่มีไว้เพื่อให้ภาควิชาเข้าใจว่าจะช่วยส่งเสริมและซัพพอร์ตคุณอย่างไร ให้เรียนและฝึกผ่าตัดได้อย่างมีความสุขตลอด 3 ปีในหลักสูตร ENT&rdquo;
                   </blockquote>
 
                   <button
-                    onClick={() => handleCopyText('ผลประเมินนี้ไม่ได้มีไว้เพื่อตัดคะแนน แต่มีไว้เพื่อให้ภาควิชาเข้าใจว่าจะช่วยซัพพอร์ตคุณอย่างไรให้เรียนได้อย่างมีความสุขตลอด 3 ปีในหลักสูตร ENT', 'step1')}
+                    onClick={() => handleCopyText('ผลประเมินนี้ไม่ได้มีไว้เพื่อตัดคะแนนหรือชี้วัดความเก่ง แต่มีไว้เพื่อให้ภาควิชาเข้าใจว่าจะช่วยส่งเสริมและซัพพอร์ตคุณอย่างไร ให้เรียนและฝึกผ่าตัดได้อย่างมีความสุขตลอด 3 ปีในหลักสูตร ENT', 'step1')}
                     className="absolute top-3 right-3 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer"
                   >
                     {copiedScript === 'step1' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedScript === 'step1' ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
                   </button>
                 </div>
+
+                {/* Candidate Context Note (if provided by applicant) */}
+                {candidate.candidateContextNote && (
+                  <div className="mt-3 p-3.5 rounded-xl bg-sky-950/40 border border-sky-800/60 text-xs text-sky-200 flex items-start gap-2.5">
+                    <FileText className="w-4 h-4 text-sky-400 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-bold text-sky-300">ข้อความที่ผู้สมัครฝากถึงอาจารย์ผู้สัมภาษณ์:</span>
+                      <p className="mt-0.5 italic text-slate-300">
+                        &ldquo;{candidate.candidateContextNote}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* STEP 2: STRENGTHS EXPLORATION (5 Min) */}
+              {/* STEP 2: STRENGTHS EXPLORATION (5 Min) — Dynamic Strengths Probes */}
               <div className="rounded-2xl p-5 bg-slate-900/90 border border-emerald-800/60 shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -706,20 +1049,67 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="rounded-xl bg-slate-950 p-4 border border-emerald-900/80">
-                    <div className="text-xs text-emerald-400 font-bold mb-1 flex items-center gap-1.5">
-                      <Award className="w-4 h-4" />
-                      <span>จุดแข็งที่ตรวจพบ: {topStrengths.map((s) => `${s.icon} ${s.name}`).join(' • ')}</span>
+                <div className="text-xs text-slate-400 mb-3 flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>คำถามถูกสร้างขึ้นแบบไดนามิกโดยอิงจาก Top Adaptive Traits ของผู้สมัคร:</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Prompt 2A: Primary Strength Ice-Breaker */}
+                  <div className="rounded-xl bg-slate-950 p-4 border border-emerald-900/80 relative flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${dynamicStrengthPrompts.prompt2A.badgeColor}`}>
+                          {dynamicStrengthPrompts.prompt2A.tag}
+                        </span>
+                        <button
+                          onClick={() => handleCopyText(dynamicStrengthPrompts.prompt2A.question, 'prompt2A')}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          {copiedScript === 'prompt2A' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedScript === 'prompt2A' ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed mb-3">
+                        💬 &ldquo;{dynamicStrengthPrompts.prompt2A.question}&rdquo;
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                      💬 คำถามชวนคุย: &ldquo;ในสถานการณ์ผ่าตัดที่มีเวลาจำกัด คุณมักจะจัดลำดับความสำคัญอย่างไร และทักษะนี้เคยช่วยชีวิตผู้ป่วยหรือคลี่คลายปัญหาอย่างไรบ้าง?&rdquo;
-                    </p>
+                    <div className="pt-2 border-t border-slate-900 text-[11px] text-emerald-400/90 flex items-start gap-1.5">
+                      <Target className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{dynamicStrengthPrompts.prompt2A.intent}</span>
+                    </div>
                   </div>
+
+                  {/* Prompt 2B: Surgical Team Dynamics Deep-Dive */}
+                  <div className="rounded-xl bg-slate-950 p-4 border border-cyan-900/80 relative flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${dynamicStrengthPrompts.prompt2B.badgeColor}`}>
+                          {dynamicStrengthPrompts.prompt2B.tag}
+                        </span>
+                        <button
+                          onClick={() => handleCopyText(dynamicStrengthPrompts.prompt2B.question, 'prompt2B')}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          {copiedScript === 'prompt2B' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedScript === 'prompt2B' ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed mb-3">
+                        💬 &ldquo;{dynamicStrengthPrompts.prompt2B.question}&rdquo;
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-slate-900 text-[11px] text-cyan-400/90 flex items-start gap-1.5">
+                      <Target className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{dynamicStrengthPrompts.prompt2B.intent}</span>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-              {/* STEP 3: SUPPORT PROBE (5-7 Min) */}
+              {/* STEP 3: SUPPORT PROBE (5-7 Min) — Tailored Vulnerability Probes */}
               <div className="rounded-2xl p-5 bg-slate-900/90 border border-amber-800/60 shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -735,167 +1125,254 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="rounded-xl bg-slate-950 p-4 border border-amber-900/80">
-                    <div className="text-xs text-amber-400 font-bold mb-1 flex items-center gap-1.5">
-                      <HeartHandshake className="w-4 h-4" />
-                      <span>จุดสังเกตด้านพลังงานล้า: {topSupportNeed.name}</span>
+                <div className="text-xs text-slate-400 mb-3 flex items-center gap-1.5">
+                  <HeartHandshake className="w-3.5 h-3.5 text-amber-400" />
+                  <span>คำถามสำรวจจุดเสี่ยงหรือพลังงานล้า เพื่อจัดสรรแผนการดูแลรองรับล่วงหน้า:</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* Prompt 3A: Normalizing Stress Probe */}
+                  <div className="rounded-xl bg-slate-950 p-4 border border-amber-900/80 relative flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${dynamicSupportPrompts.prompt3A.badgeColor}`}>
+                          {dynamicSupportPrompts.prompt3A.tag}
+                        </span>
+                        <button
+                          onClick={() => handleCopyText(dynamicSupportPrompts.prompt3A.question, 'prompt3A')}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          {copiedScript === 'prompt3A' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedScript === 'prompt3A' ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed mb-3">
+                        💬 &ldquo;{dynamicSupportPrompts.prompt3A.question}&rdquo;
+                      </p>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                      💬 คำถามชวนคุย: &ldquo;เมื่อเผชิญกับเคสที่ไม่เป็นไปตามแผนจนเกิดความรู้สึกล้าสะสมในใจ คุณสังเกตสัญญาณแรกของตนเองอย่างไร และอยากให้ภาควิชาเตรียมการสนับสนุนด้านใดเป็นพิเศษ?&rdquo;
+                    <div className="pt-2 border-t border-slate-900 text-[11px] text-amber-400/90 flex items-start gap-1.5">
+                      <Target className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{dynamicSupportPrompts.prompt3A.intent}</span>
+                    </div>
+                  </div>
+
+                  {/* Prompt 3B: Targeted Vulnerability Probe */}
+                  <div className="rounded-xl bg-slate-950 p-4 border border-orange-900/80 relative flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${dynamicSupportPrompts.prompt3B.badgeColor}`}>
+                          {dynamicSupportPrompts.prompt3B.tag}
+                        </span>
+                        <button
+                          onClick={() => handleCopyText(dynamicSupportPrompts.prompt3B.question, 'prompt3B')}
+                          className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium flex items-center gap-1 cursor-pointer transition-all"
+                        >
+                          {copiedScript === 'prompt3B' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedScript === 'prompt3B' ? 'คัดลอกแล้ว' : 'คัดลอก'}</span>
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed mb-3">
+                        💬 &ldquo;{dynamicSupportPrompts.prompt3B.question}&rdquo;
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-slate-900 text-[11px] text-orange-400/90 flex items-start gap-1.5">
+                      <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      <span>{dynamicSupportPrompts.prompt3B.interviewerTip}</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* ======================================================== */}
+            {/* C. DESKTOP TWO-COLUMN GRID: CARE COMMITMENT & NOTES      */}
+            {/* ======================================================== */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              
+              {/* LEFT COLUMN: INSTITUTIONAL CARE COMMITMENT CHECKLIST */}
+              <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-5 sm:p-6 backdrop-blur-md shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      <span>Institutional Care Commitment</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      คำมั่นสัญญาการดูแลที่ภาควิชาพร้อมจัดให้ผู้สมัครเมื่อรับเข้าเรียน
                     </p>
                   </div>
+                  <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2.5 py-1 rounded-xl shrink-0 self-start sm:self-auto">
+                    เลือกแล้ว {carePlan.length} รายการ
+                  </span>
                 </div>
-              </div>
 
-            </div>
-
-            {/* 2. INSTITUTIONAL CARE COMMITMENT CHECKLIST */}
-            <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-6 backdrop-blur-md shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                    <span>Institutional Care Commitment (คำมั่นสัญญาการดูแลเมื่อรับเข้าเรียน)</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    ติ๊กเลือกแผนการดูแลที่ภาควิชาพร้อมจัดให้ผู้สมัครท่านนี้ (บันทึกลงแฟ้มประเมินทันที)
-                  </p>
+                {/* Quick Auto-Select Recommended Button */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={handleApplyAllRecommendations}
+                    className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900/90 border border-emerald-700/80 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>✨ เลือกตามที่ระบบแนะนำ (Select All Recommended)</span>
+                  </button>
                 </div>
-                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-2.5 py-1 rounded-xl">
-                  เลือกแล้ว {carePlan.length} รายการ
-                </span>
-              </div>
 
-              {/* Checklist Items */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {INSTITUTIONAL_CARE_DEFAULTS.map((item, idx) => {
-                  const isChecked = carePlan.includes(item);
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => handleToggleCareItem(item)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                        isChecked
-                          ? 'bg-emerald-950/40 border-emerald-600/80 text-white shadow-xs'
-                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="mt-0.5 shrink-0">
-                        {isChecked ? (
-                          <CheckSquare className="w-4 h-4 text-emerald-400" />
-                        ) : (
-                          <Square className="w-4 h-4 text-slate-500" />
-                        )}
+                {/* Checklist Items with Recommendation Badges and AI Rationales */}
+                <div className="space-y-2.5 pt-1">
+                  {smartCareRecommendations.map((item, idx) => {
+                    const isChecked = carePlan.includes(item.text);
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => handleToggleCareItem(item.text)}
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                          isChecked
+                            ? 'bg-emerald-950/40 border-emerald-600/80 text-white shadow-xs'
+                            : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="mt-0.5 shrink-0">
+                          {isChecked ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-400" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                            <span className="text-xs sm:text-sm font-medium leading-relaxed text-slate-200">
+                              {item.text}
+                            </span>
+                            {item.recommended && (
+                              <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                                <span>⭐</span> แนะนำโดยระบบ
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-400 leading-normal flex items-start gap-1">
+                            <span className="text-slate-500">💡</span>
+                            <span>{item.rationale}</span>
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-xs sm:text-sm font-medium leading-relaxed">
-                        {item}
+                    );
+                  })}
+                </div>
+
+                {/* Add Custom Commitment */}
+                <form onSubmit={handleAddCustomCare} className="flex gap-2 pt-2">
+                  <input
+                    type="text"
+                    value={customCareText}
+                    onChange={(e) => setCustomCareText(e.target.value)}
+                    placeholder="ระบุคำมั่นสัญญาหรือแผนการดูแลเพิ่มเติมเฉพาะบุคคล..."
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!customCareText.trim()}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>เพิ่ม</span>
+                  </button>
+                </form>
+              </div>
+
+              {/* RIGHT COLUMN: EVALUATION SCORING & INTERVIEW NOTES */}
+              <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-5 sm:p-6 backdrop-blur-md shadow-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-400" />
+                    <span>การตัดสินใจและความเห็นของกรรมการ (Evaluator Notes)</span>
+                  </h3>
+                  {isSaved && (
+                    <span className="text-[11px] font-mono font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800 animate-in fade-in">
+                      ✓ บันทึกแล้ว
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {/* Status Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">
+                      สถานะการพิจารณา
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => {
+                        const val = e.target.value as 'UNREVIEWED' | 'SHORTLISTED' | 'NEEDS_INTERVIEW_PROBE' | 'APPROVED' | 'CONCERN';
+                        setStatus(val);
+                        setTimeout(handleSaveAssessmentNotes, 100);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="UNREVIEWED">รอการพิจารณา (Unreviewed)</option>
+                      <option value="SHORTLISTED">ผ่านการคัดเลือก (Shortlisted)</option>
+                      <option value="NEEDS_INTERVIEW_PROBE">รับเข้าหลักสูตร + แนะนำ Mentor ประกบ (Needs Mentorship)</option>
+                      <option value="APPROVED">อนุมัติการรับเข้า (Approved)</option>
+                      <option value="CONCERN">มีข้อกังวลที่ต้องติดตาม (Concern)</option>
+                    </select>
+                  </div>
+
+                  {/* Rating Stars */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">
+                      คะแนนความพร้อมในการเรียนรู้ (1–5 ดาว)
+                    </label>
+                    <div className="flex items-center gap-2 pt-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => {
+                            setRating(s);
+                            setTimeout(handleSaveAssessmentNotes, 100);
+                          }}
+                          className="p-1 rounded-lg text-slate-500 hover:text-amber-400 transition-colors cursor-pointer"
+                        >
+                          <Star className={`w-6 h-6 ${s <= rating ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`} />
+                        </button>
+                      ))}
+                      <span className="text-xs font-mono text-slate-400 ml-2">
+                        {rating > 0 ? `${rating}/5 คะแนน` : 'ยังไม่ได้ให้คะแนน'}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
 
-              {/* Add Custom Commitment */}
-              <form onSubmit={handleAddCustomCare} className="flex gap-2 pt-2">
-                <input
-                  type="text"
-                  value={customCareText}
-                  onChange={(e) => setCustomCareText(e.target.value)}
-                  placeholder="ระบุคำมั่นสัญญาหรือแผนการดูแลเพิ่มเติมเฉพาะบุคคล..."
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
-                />
-                <button
-                  type="submit"
-                  disabled={!customCareText.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>เพิ่ม</span>
-                </button>
-              </form>
-            </div>
+                  {/* Notes Area */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1.5">
+                      บันทึกเพิ่มเติมของอาจารย์ผู้สัมภาษณ์ (Private Notes)
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={committeeNotes}
+                      onChange={(e) => setCommitteeNotes(e.target.value)}
+                      placeholder="บันทึกข้อสังเกต บุคลิกภาพ ความตั้งใจจริง หรือประเด็นที่พูดคุยในห้องสัมภาษณ์..."
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
+                    />
+                  </div>
 
-            {/* 3. EVALUATION SCORING & INTERVIEW NOTES */}
-            <div className="rounded-3xl bg-slate-900/80 border border-slate-800 p-6 backdrop-blur-md shadow-xl space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-400" />
-                <span>การตัดสินใจและความเห็นของกรรมการ (Evaluator Notes)</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Status Selection */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">
-                    สถานะการพิจารณา
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => {
-                      const val = e.target.value as 'UNREVIEWED' | 'SHORTLISTED' | 'NEEDS_INTERVIEW_PROBE' | 'APPROVED' | 'CONCERN';
-                      setStatus(val);
-                      setTimeout(handleSaveAssessmentNotes, 100);
-                    }}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="UNREVIEWED">รอการพิจารณา (Unreviewed)</option>
-                    <option value="SHORTLISTED">ผ่านการคัดเลือก (Shortlisted)</option>
-                    <option value="NEEDS_INTERVIEW_PROBE">รับเข้าหลักสูตร + แนะนำ Mentor ประกบ (Needs Mentorship)</option>
-                    <option value="APPROVED">อนุมัติการรับเข้า (Approved)</option>
-                    <option value="CONCERN">มีข้อกังวลที่ต้องติดตาม (Concern)</option>
-                  </select>
-                </div>
-
-                {/* Rating Stars */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">
-                    คะแนนความพร้อมในการเรียนรู้ (1–5 ดาว)
-                  </label>
-                  <div className="flex items-center gap-2 pt-1">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => {
-                          setRating(s);
-                          setTimeout(handleSaveAssessmentNotes, 100);
-                        }}
-                        className="p-1 rounded-lg text-slate-500 hover:text-amber-400 transition-colors"
-                      >
-                        <Star className={`w-6 h-6 ${s <= rating ? 'text-amber-400 fill-amber-400' : 'text-slate-700'}`} />
-                      </button>
-                    ))}
-                    <span className="text-xs font-mono text-slate-400 ml-2">
-                      {rating > 0 ? `${rating}/5 คะแนน` : 'ยังไม่ได้ให้คะแนน'}
-                    </span>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSaveAssessmentNotes}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>บันทึกความเห็นการประเมิน</span>
+                    </button>
                   </div>
                 </div>
+
               </div>
 
-              {/* Notes Area */}
-              <div>
-                <label className="block text-xs font-bold text-slate-400 mb-1.5">
-                  บันทึกเพิ่มเติมของอาจารย์ผู้สัมภาษณ์ (Private Notes)
-                </label>
-                <textarea
-                  rows={3}
-                  value={committeeNotes}
-                  onChange={(e) => setCommitteeNotes(e.target.value)}
-                  placeholder="บันทึกข้อสังเกต บุคลิกภาพ ความตั้งใจจริง หรือประเด็นที่พูดคุยในห้องสัมภาษณ์..."
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={handleSaveAssessmentNotes}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>บันทึกความเห็นการประเมิน</span>
-                </button>
-              </div>
             </div>
 
           </div>
