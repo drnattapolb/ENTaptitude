@@ -416,7 +416,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   // -------------------------------------------------------------
   if (step === 'NAME_INPUT') {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
+      <div className="min-h-[100dvh] bg-[#FAF7F2] flex flex-col justify-between pb-[calc(2rem+env(safe-area-inset-bottom))]">
         {renderMinimalHeader()}
         <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
           <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
@@ -522,7 +522,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   // -------------------------------------------------------------
   if (step === 'INSTRUCTIONS') {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
+      <div className="min-h-[100dvh] bg-[#FAF7F2] flex flex-col justify-between pb-[calc(2rem+env(safe-area-inset-bottom))]">
         {renderMinimalHeader()}
         <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
           <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
@@ -617,7 +617,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   // -------------------------------------------------------------
   if (step === 'SUBMIT_CONFIRM') {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
+      <div className="min-h-[100dvh] bg-[#FAF7F2] flex flex-col justify-between pb-[calc(2rem+env(safe-area-inset-bottom))]">
         {renderMinimalHeader()}
         <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
           <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
@@ -740,7 +740,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   // STEP 3: QUESTIONS (Sets 1 to 7) - Streamlined Zero-Clutter UX
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1F2823] flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-[100dvh] bg-[#FAF7F2] text-[#1F2823] flex flex-col justify-between overflow-x-hidden">
       {/* SINGLE CONSOLIDATED STICKY TOP HEADER BAR */}
       <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E2ECE5] transition-all">
         <div className="w-full max-w-[680px] mx-auto px-3 sm:px-4 h-12 sm:h-13 flex items-center justify-between gap-1.5 sm:gap-2 box-border">
@@ -843,7 +843,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       </header>
 
       {/* Main Assessment Container (Target max-width: 680px for visual focus & ergonomic reading) */}
-      <div className="flex-1 w-full max-w-[680px] mx-auto px-4 box-border pt-3.5 sm:pt-4.5 pb-3 sm:pb-4 flex flex-col justify-between">
+      <div className="flex-1 w-full max-w-[680px] mx-auto px-4 box-border pt-3.5 sm:pt-4.5 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col justify-between">
         <div>
           {/* Scenario Box (Clean & Compact) */}
           <div className="rounded-xl sm:rounded-2xl p-3.5 sm:p-4 bg-white border border-[#D6E2DA] shadow-xs mb-2.5 sm:mb-3">
@@ -964,7 +964,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       </div>
 
       {/* Sticky Bottom Action Bar: Keep only [ก่อนหน้า] and [ชุดถัดไป] */}
-      <div className="sticky bottom-2 sm:bottom-3 z-20 w-full bg-white/95 backdrop-blur-md rounded-2xl border border-[#D6E2DA] p-2 sm:p-2.5 shadow-md flex items-center justify-between gap-2 box-border">
+      <div className="sticky bottom-0 sm:bottom-3 z-50 w-full bg-white/95 backdrop-blur-md rounded-2xl border border-[#D6E2DA] p-2 sm:p-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:pb-2.5 shadow-md flex items-center justify-between gap-2 box-border mt-3">
         <button
           onClick={handlePrev}
           disabled={currentIndex === 0}

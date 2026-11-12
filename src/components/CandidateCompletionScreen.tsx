@@ -7,7 +7,7 @@ interface CompletionProps {
 
 export const CandidateCompletionScreen: React.FC<CompletionProps> = ({ onReturnHome }) => {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex items-center justify-center p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] relative overflow-hidden font-sans">
       {/* Background Glow */}
       <div className="absolute w-[400px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 

@@ -57,7 +57,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col justify-between pb-[calc(1.5rem+env(safe-area-inset-bottom))] relative overflow-hidden font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Soft Emerald Ambient Glow (Single Center-Piece Glow) */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none" />
 

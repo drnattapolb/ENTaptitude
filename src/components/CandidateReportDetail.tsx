@@ -392,7 +392,7 @@ export const CandidateReportDetail: React.FC<CandidateReportDetailProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-16">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 font-sans antialiased pb-[calc(4rem+env(safe-area-inset-bottom))]">
       {/* Top Ambient Light */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-60 bg-emerald-500/5 blur-[120px] pointer-events-none" />
 

@@ -38,7 +38,7 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({
   const { archetype, stats, activeBuffs, energyDrains, microHabits, overallResilienceIndex } = rpg;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* TOP STATUS BAR: Ragnarok Character Status Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-950 border border-slate-800 p-5 sm:p-7 shadow-2xl">
