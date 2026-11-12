@@ -80,7 +80,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans antialiased ${
+    <div className={`min-h-screen flex flex-col font-sans antialiased overflow-x-hidden ${
       currentView === 'welcome'
         ? 'bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950'
         : 'bg-[#FAF7F2] text-[#1F2823] selection:bg-[#4A6B56] selection:text-white'

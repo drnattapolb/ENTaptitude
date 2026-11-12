@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Clock,
   Copy,
@@ -76,6 +76,50 @@ export const MentorshipInterviewGuide: React.FC<MentorshipInterviewGuideProps> =
   const supportNeeds = candidate.rpgProfile?.energyDrains && candidate.rpgProfile.energyDrains.length > 0
     ? candidate.rpgProfile.energyDrains
     : [];
+
+  // 3. Smart System Recommendations based on candidate scoring tier & profile
+  const smartRecommendations = useMemo(() => {
+    const drainId = candidate.rpgProfile?.energyDrains?.[0]?.id || '';
+    const drainName = candidate.rpgProfile?.energyDrains?.[0]?.name?.toLowerCase() || '';
+    const redFlagScore = candidate.redFlagAnalysis?.score ?? 0;
+    const isModerateOrHigh = candidate.redFlagAnalysis?.tier !== 'LOW' || redFlagScore >= 3;
+    const hasSelfBlame = drainId.includes('blame') || drainName.includes('blame');
+    const hasFatigueRisk = drainId.includes('substance') || drainName.includes('substance') || drainId.includes('sleep') || drainName.includes('sleep') || redFlagScore >= 4;
+
+    return INSTITUTIONAL_CARE_OPTIONS.map((opt) => {
+      let recommended = false;
+      let rationale = '';
+      if (opt.id === 'senior_buddy') {
+        recommended = isModerateOrHigh || hasSelfBlame;
+        rationale = 'ช่วยลดความเคว้งช่วงปรับตัวเข้าสู่ระบบเวรและหัตถการผ่าตัด';
+      } else if (opt.id === 'faculty_mentor') {
+        recommended = true;
+        rationale = 'สร้างสัมพันธภาพและการตัดสินใจทางคลินิกร่วมกับอาจารย์ที่ปรึกษา';
+      } else if (opt.id === 'sleep_hygiene_rotation') {
+        recommended = hasFatigueRisk;
+        rationale = 'ตรวจพบความเสี่ยงเรื่องสุขอนามัยการนอนหลับและความล้าสะสม';
+      } else if (opt.id === 'crisis_debrief') {
+        recommended = hasSelfBlame || isModerateOrHigh;
+        rationale = 'ป้องกัน Self-Blame Loop และส่งเสริม Safe Debriefing หลังเคสวิกฤต';
+      }
+      return { ...opt, recommended, rationale };
+    });
+  }, [candidate]);
+
+  const handleApplyAllRecommended = () => {
+    const recommendedTexts = smartRecommendations
+      .filter((item) => item.recommended)
+      .map((item) => item.label);
+    const merged = Array.from(new Set([...carePlan, ...recommendedTexts]));
+    const updatedCandidate: CandidateAssessmentResult = {
+      ...candidate,
+      institutionalCarePlan: merged
+    };
+    updateCandidateInStorage(updatedCandidate);
+    onUpdateCandidate(updatedCandidate);
+    setIsCommitmentSaved(true);
+    setTimeout(() => setIsCommitmentSaved(false), 1800);
+  };
 
   const handleCopyScript = () => {
     const text = 'ผลประเมินนี้ไม่ได้มีไว้เพื่อตัดคะแนน แต่มีไว้เพื่อให้ภาควิชาเข้าใจว่าจะช่วยซัพพอร์ตคุณอย่างไรให้เรียนได้อย่างมีความสุขตลอด 3 ปี';
@@ -343,13 +387,23 @@ export const MentorshipInterviewGuide: React.FC<MentorshipInterviewGuideProps> =
               )}
             </div>
 
-            <p className="text-xs text-[#58665E] mb-3 leading-relaxed">
-              หากผู้สมัครคนนี้ผ่านการคัดเลือกเป็นแพทย์ประจำบ้าน ภาควิชาควรจัดเตรียมระบบสนับสนุนใดให้พร้อมตั้งแต่วันแรก:
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <p className="text-xs text-[#58665E] leading-relaxed">
+                หากผู้สมัครคนนี้ผ่านการคัดเลือกเป็นแพทย์ประจำบ้าน ภาควิชาควรจัดเตรียมระบบสนับสนุนใดให้พร้อมตั้งแต่วันแรก:
+              </p>
+              <button
+                type="button"
+                onClick={handleApplyAllRecommended}
+                className="shrink-0 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 hover:bg-emerald-200 border border-emerald-300 px-2.5 py-1.5 rounded-xl transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>✨ เลือกตามที่ระบบแนะนำ</span>
+              </button>
+            </div>
 
             {/* Checklist Options */}
             <div className="space-y-2 mb-4">
-              {INSTITUTIONAL_CARE_OPTIONS.map((opt) => {
+              {smartRecommendations.map((opt) => {
                 const isSelected = carePlan.includes(opt.label);
                 return (
                   <div
@@ -372,12 +426,24 @@ export const MentorshipInterviewGuide: React.FC<MentorshipInterviewGuideProps> =
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold leading-snug">
-                        {opt.label}
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-0.5">
+                        <span className="text-xs font-bold leading-snug">
+                          {opt.label}
+                        </span>
+                        {opt.recommended && (
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
+                            <span>⭐ แนะนำโดยระบบ</span>
+                          </span>
+                        )}
                       </div>
-                      <div className="text-[11px] text-[#6E7E74] mt-0.5">
+                      <div className="text-[11px] text-[#6E7E74]">
                         {opt.description}
                       </div>
+                      {opt.rationale && (
+                        <div className="text-[10px] text-emerald-800 mt-1 flex items-center gap-1 font-medium">
+                          <span>💡 {opt.rationale}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

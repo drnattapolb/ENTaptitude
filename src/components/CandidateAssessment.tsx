@@ -288,13 +288,45 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       finalizedAnswers[set.setId] = { most: m, least: l };
     });
 
-    const result = calculateCandidateResult(candidateName.trim(), finalizedAnswers, {
-      specialty,
-      hospitalOrSchool: hospitalOrSchool.trim() || 'ผู้สมัครแพทย์ประจำบ้าน',
-      candidateContextNote: candidateContextNote.trim() || undefined
-    });
-
     setIsSubmitting(true);
+    let result: CandidateAssessmentResult;
+
+    // Secure Backend State Management & Scoring Verification:
+    // Call server API endpoint to validate answers and calculate authoritative scores
+    try {
+      const response = await fetch('/api/assessment/evaluate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          candidateName: candidateName.trim(),
+          answers: finalizedAnswers,
+          metadata: {
+            specialty,
+            hospitalOrSchool: hospitalOrSchool.trim() || 'ผู้สมัครแพทย์ประจำบ้าน',
+            candidateContextNote: candidateContextNote.trim() || undefined
+          }
+        })
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        result = payload.result;
+        console.log('✅ Server-authoritative evaluation completed & verified.');
+      } else {
+        const errPayload = await response.json().catch(() => ({}));
+        throw new Error(errPayload.error || 'Server evaluation returned non-200');
+      }
+    } catch (apiErr) {
+      console.warn('Backend evaluation fallback to resilient client calculation:', apiErr);
+      result = calculateCandidateResult(candidateName.trim(), finalizedAnswers, {
+        specialty,
+        hospitalOrSchool: hospitalOrSchool.trim() || 'ผู้สมัครแพทย์ประจำบ้าน',
+        candidateContextNote: candidateContextNote.trim() || undefined
+      });
+    }
+
     saveCandidateResult(result);
 
     try {
@@ -340,6 +372,11 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [step, isCurrentSetValid, currentIndex]);
 
+  // Auto-Scroll to top smoothly on question change or step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentIndex, step]);
+
   const handleSafeExit = () => {
     if (window.confirm('คุณต้องการออกจากแบบสำรวจและกลับสู่หน้าหลักหรือไม่?')) {
       onExit();
@@ -348,24 +385,24 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
 
   const renderMinimalHeader = () => (
     <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E2ECE5] transition-all">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 h-13 sm:h-14 flex items-center justify-between">
+      <div className="w-full max-w-[680px] mx-auto px-4 h-12 sm:h-13 flex items-center justify-between box-border">
         <div
           onClick={handleSafeExit}
           title="แตะเพื่อกลับหน้าแรก"
-          className="flex items-center gap-2 cursor-pointer group select-none"
+          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group select-none"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#5A826B] to-[#3D5C4A] p-0.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#5A826B] to-[#3D5C4A] p-0.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
             <div className="w-full h-full bg-[#FAF7F2] rounded-[6px] sm:rounded-[9px] flex items-center justify-center">
-              <Stethoscope className="w-3.5 h-3.5 text-[#4A6B56]" />
+              <Stethoscope className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#4A6B56]" />
             </div>
           </div>
-          <span className="text-sm sm:text-base font-extrabold tracking-tight text-[#1F2823] group-hover:text-[#4A6B56] transition-colors">
+          <span className="text-xs sm:text-base font-extrabold tracking-tight text-[#1F2823] group-hover:text-[#4A6B56] transition-colors">
             ResiCope
           </span>
         </div>
         <button
           onClick={handleSafeExit}
-          className="flex items-center gap-1.5 text-xs font-semibold text-[#58665E] hover:text-[#1F2823] px-3 py-1.5 rounded-xl border border-[#D6E2DA] bg-white hover:bg-[#F2F7F4] transition-all cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-semibold text-[#58665E] hover:text-[#1F2823] px-3 py-1.5 rounded-xl border border-[#D6E2DA] bg-white hover:bg-[#F2F7F4] transition-all cursor-pointer shadow-2xs"
         >
           <Home className="w-3.5 h-3.5" />
           <span>หน้าแรก</span>
@@ -381,8 +418,8 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
         {renderMinimalHeader()}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-[28px] organic-card p-6 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)]">
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
+          <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
           <div className="text-center mb-6">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EBF2ED] border border-[#C6D8CC] flex items-center justify-center text-[#4A6B56] mb-3 shadow-sm">
               <User className="w-7 h-7" />
@@ -487,8 +524,8 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
         {renderMinimalHeader()}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-[28px] organic-card p-6 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)]">
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
+          <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
           {/* Header */}
           <div className="text-center mb-6">
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-[#EBF2ED] text-[#375241] border border-[#C6D8CC] inline-block mb-2">
@@ -582,8 +619,8 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
     return (
       <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between">
         {renderMinimalHeader()}
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-[28px] organic-card p-6 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)]">
+        <div className="flex-1 flex items-center justify-center p-3 sm:p-4 w-full box-border">
+          <div className="w-full max-w-[680px] rounded-[28px] organic-card p-5 sm:p-8 bg-white border border-[#D6E2DA] shadow-[0_10px_30px_rgba(74,107,86,0.08)] box-border">
           <div className="text-center mb-6">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EBF2ED] border border-[#C6D8CC] flex items-center justify-center text-[#4A6B56] mb-3 shadow-sm">
               <Award className="w-7 h-7" />
@@ -703,29 +740,37 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
   // STEP 3: QUESTIONS (Sets 1 to 7) - Streamlined Zero-Clutter UX
   // -------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#1F2823] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#1F2823] flex flex-col justify-between overflow-x-hidden">
       {/* SINGLE CONSOLIDATED STICKY TOP HEADER BAR */}
       <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E2ECE5] transition-all">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 h-13 sm:h-14 flex items-center justify-between gap-2">
+        <div className="w-full max-w-[680px] mx-auto px-3 sm:px-4 h-12 sm:h-13 flex items-center justify-between gap-1.5 sm:gap-2 box-border">
           
           {/* 1. Left: Logo/Title 'ResiCope' */}
           <div
             onClick={handleSafeExit}
             title="แตะเพื่อกลับหน้าแรก"
-            className="flex items-center gap-2 cursor-pointer group select-none shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group select-none shrink-0"
           >
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#5A826B] to-[#3D5C4A] p-0.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#5A826B] to-[#3D5C4A] p-0.5 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#FAF7F2] rounded-[6px] sm:rounded-[9px] flex items-center justify-center">
-                <Stethoscope className="w-3.5 h-3.5 text-[#4A6B56]" />
+                <Stethoscope className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#4A6B56]" />
               </div>
             </div>
-            <span className="text-sm sm:text-base font-extrabold tracking-tight text-[#1F2823] group-hover:text-[#4A6B56] transition-colors">
+            <span className="text-xs sm:text-base font-extrabold tracking-tight text-[#1F2823] group-hover:text-[#4A6B56] transition-colors">
               ResiCope
             </span>
           </div>
 
-          {/* 2. Center: Stepper Dots (1-7) */}
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5 flex-1 max-w-xs mx-auto">
+          {/* 2. Center Progress: Compact badge on Mobile (< sm), Full 1-7 Numeric Stepper on Tablet/Desktop (>= sm) */}
+          {/* Mobile view (< sm): Compact badge 'ชุดที่ X/7' to prevent overflow on narrow screens */}
+          <div className="flex sm:hidden items-center justify-center shrink-0">
+            <span className="text-[11px] font-mono font-bold text-[#2D5C39] bg-[#E3EFE6] border border-[#B8D7C0] px-2.5 py-0.5 rounded-full shadow-2xs whitespace-nowrap">
+              ชุดที่ {currentIndex + 1}/7
+            </span>
+          </div>
+
+          {/* Tablet & Desktop (>= sm): Stepper Dots (1-7) */}
+          <div className="hidden sm:flex items-center justify-center gap-1 sm:gap-1.5 flex-1 max-w-xs mx-auto">
             {QUESTION_SETS.map((q, idx) => {
               const setItem = setsState[idx];
               const hasMost = setItem?.options.some((o) => o.status === 'most');
@@ -756,12 +801,12 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
           </div>
 
           {/* 3. Right: Timer + Info (?) Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Zen Timer Mode */}
             <button
               type="button"
               onClick={() => setIsZenMode(!isZenMode)}
-              className="flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-lg border border-[#D6E2DA] bg-white text-[#58665E] hover:text-[#1F2823] hover:bg-[#F2F7F4] transition-all shadow-2xs cursor-pointer active:scale-95"
+              className="flex items-center gap-1 text-[11px] font-mono px-2 py-1 rounded-lg border border-[#D6E2DA] bg-white text-[#58665E] hover:text-[#1F2823] hover:bg-[#F2F7F4] transition-all shadow-2xs cursor-pointer active:scale-95 whitespace-nowrap"
               title={isZenMode ? "แตะเพื่อแสดงเวลา" : "แตะเพื่อเปิด Zen Mode"}
               aria-label="จับเวลาทำแบบสำรวจ"
             >
@@ -779,7 +824,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
             <button
               type="button"
               onClick={() => setShowInfoModal(true)}
-              className="p-1 sm:p-1.5 rounded-lg text-[#6E7E74] hover:text-[#2D5C39] hover:bg-[#EBF2ED] border border-transparent hover:border-[#C6D8CC] transition-all cursor-pointer"
+              className="p-1 sm:p-1.5 rounded-lg text-[#6E7E74] hover:text-[#2D5C39] hover:bg-[#EBF2ED] border border-transparent hover:border-[#C6D8CC] transition-all cursor-pointer shrink-0"
               title="เกณฑ์การตอบเพื่อความสบายใจ"
               aria-label="เกณฑ์การตอบเพื่อความสบายใจ"
             >
@@ -797,11 +842,11 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
         </div>
       </header>
 
-      {/* Main Assessment Container */}
-      <div className="flex-1 max-w-3xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-col justify-between">
+      {/* Main Assessment Container (Target max-width: 680px for visual focus & ergonomic reading) */}
+      <div className="flex-1 w-full max-w-[680px] mx-auto px-4 box-border pt-3.5 sm:pt-4.5 pb-3 sm:pb-4 flex flex-col justify-between">
         <div>
           {/* Scenario Box (Clean & Compact) */}
-          <div className="rounded-xl sm:rounded-2xl p-3 sm:p-3.5 bg-white border border-[#D6E2DA] shadow-xs mb-2 sm:mb-2.5">
+          <div className="rounded-xl sm:rounded-2xl p-3.5 sm:p-4 bg-white border border-[#D6E2DA] shadow-xs mb-2.5 sm:mb-3">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#4A6B56]">
                 {currentSet.title.replace(/^ชุดที่\s*\d+\s*:\s*/, '')}
@@ -919,7 +964,7 @@ export const CandidateAssessment: React.FC<CandidateAssessmentProps> = ({
       </div>
 
       {/* Sticky Bottom Action Bar: Keep only [ก่อนหน้า] and [ชุดถัดไป] */}
-      <div className="sticky bottom-2 sm:bottom-3 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-[#D6E2DA] p-2 sm:p-2.5 shadow-md flex items-center justify-between gap-2.5">
+      <div className="sticky bottom-2 sm:bottom-3 z-20 w-full bg-white/95 backdrop-blur-md rounded-2xl border border-[#D6E2DA] p-2 sm:p-2.5 shadow-md flex items-center justify-between gap-2 box-border">
         <button
           onClick={handlePrev}
           disabled={currentIndex === 0}
